@@ -1,30 +1,35 @@
 include Makefile.inc
 
+BUILD_DIR := build
 KERNEL=kernel.bin
-SOURCES=$(wildcard *.c)
-SOURCES_ASM=$(wildcard asm/*.asm)
-OBJECTS=$(SOURCES:.c=.o)
-OBJECTS_ASM=$(SOURCES_ASM:.asm=.o)
+SOURCES=$(shell find . -name "*.c")
+SOURCES_ASM=$(shell find asm -name "*.asm")
+OBJECTS=$(SOURCES:%.c=$(BUILD_DIR)/%.c.o)
+OBJECTS_ASM=$(SOURCES_ASM:%.asm=$(BUILD_DIR)/%.s.o)
 LOADERSRC=loader.asm
 
 LOADEROBJECT=$(LOADERSRC:.asm=.o)
 STATICLIBS=
 
-all: $(KERNEL)
+all: $(BUILD_DIR)/$(KERNEL)
 
-$(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM)
-	$(LD) $(LDFLAGS) -T kernel.ld -o $(KERNEL) $(LOADEROBJECT) $(OBJECTS) $(OBJECTS_ASM) $(STATICLIBS)
+$(BUILD_DIR)/$(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM)
+	$(LD) $(LDFLAGS) -T kernel.ld -o $@ $^
 
-%.o: %.c
+$(BUILD_DIR)/%.c.o: %.c
+	$(MKDIR_P) $(dir $@)
 	$(GCC) $(GCCFLAGS) -I./include -c $< -o $@
 
-%.o : %.asm
+$(BUILD_DIR)/%.s.o : %.asm
+	$(MKDIR_P) $(dir $@)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(LOADEROBJECT):
 	$(ASM) $(ASMFLAGS) $(LOADERSRC) -o $(LOADEROBJECT)
 
 clean:
-	rm -rf asm/*.o *.o *.bin
+	rm -rf $(BUILD_DIR)
 
 .PHONY: all clean
+
+MKDIR_P ?= mkdir -p

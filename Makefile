@@ -1,22 +1,25 @@
+SUBDIRS := $(wildcard */.)
 
 all:  bootloader kernel userland image
 
+rebuild: clean all
+
 bootloader:
-	cd Bootloader; make all
+	$(MAKE) -C Bootloader
 
 kernel:
-	cd Kernel; make all
+	$(MAKE) -C Kernel
 
 userland:
-	cd Userland; make all
+	$(MAKE) -C Userland
 
 image: kernel bootloader userland
-	cd Image; make all
+	$(MAKE) -C Image
 
 clean:
-	cd Bootloader; make clean
-	cd Image; make clean
-	cd Kernel; make clean
-	cd Userland; make clean
+	$(MAKE) -C Bootloader clean
+	$(MAKE) -C Kernel clean
+	$(MAKE) -C Userland clean
+	$(MAKE) -C Image clean
 
 .PHONY: bootloader image collections kernel userland all clean
