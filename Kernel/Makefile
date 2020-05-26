@@ -3,12 +3,12 @@ include Makefile.inc
 BUILD_DIR := build
 KERNEL=kernel.bin
 SOURCES=$(shell find . -name "*.c")
-SOURCES_ASM=$(shell find asm -name "*.asm")
+SOURCES_ASM=$(shell find . -name "*.s")
 OBJECTS=$(SOURCES:%.c=$(BUILD_DIR)/%.c.o)
-OBJECTS_ASM=$(SOURCES_ASM:%.asm=$(BUILD_DIR)/%.s.o)
+OBJECTS_ASM=$(SOURCES_ASM:%.s=$(BUILD_DIR)/%.s.o)
 LOADERSRC=loader.asm
 
-LOADEROBJECT=$(LOADERSRC:.asm=.o)
+LOADEROBJECT=$(LOADERSRC:%.asm=$(BUILD_DIR)/%.o)
 STATICLIBS=
 
 all: $(BUILD_DIR)/$(KERNEL)
@@ -20,11 +20,12 @@ $(BUILD_DIR)/%.c.o: %.c
 	$(MKDIR_P) $(dir $@)
 	$(GCC) $(GCCFLAGS) -I./include -c $< -o $@
 
-$(BUILD_DIR)/%.s.o : %.asm
+$(BUILD_DIR)/%.s.o : %.s
 	$(MKDIR_P) $(dir $@)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(LOADEROBJECT):
+$(LOADEROBJECT): $(LOADERSRC)
+	$(MKDIR_P) $(dir $@)
 	$(ASM) $(ASMFLAGS) $(LOADERSRC) -o $(LOADEROBJECT)
 
 clean:

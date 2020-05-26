@@ -1,4 +1,5 @@
 SUBDIRS := $(wildcard */.)
+MAKE := make --no-print-directory
 
 all:  bootloader kernel userland image
 
