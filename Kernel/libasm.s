@@ -1,5 +1,7 @@
 GLOBAL cpuVendor
 
+GLOBAL _halt
+
 section .text
 	
 cpuVendor:
@@ -25,3 +27,7 @@ cpuVendor:
 	mov rsp, rbp
 	pop rbp
 	ret
+
+_halt:
+	hlt
+	jmp _halt

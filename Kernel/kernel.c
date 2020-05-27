@@ -1,8 +1,9 @@
 #include <stdint.h>
-#include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
 #include <naiveConsole.h>
+#include <idtLoader.h>
+
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -35,6 +36,7 @@ void * getStackBase()
 
 void * initializeKernelBinary()
 {
+	/*
 	char buffer[10];
 
 	ncPrint("[x64BareBones]");
@@ -77,11 +79,14 @@ void * initializeKernelBinary()
 	ncPrint("[Done]");
 	ncNewline();
 	ncNewline();
+	*/
 	return getStackBase();
 }
 
+
 int main()
 {	
+	/*
 	ncPrint("[Kernel Main]");
 	ncNewline();
 	ncPrint("  Sample code module at 0x");
@@ -100,5 +105,10 @@ int main()
 	ncNewline();
 
 	ncPrint("[Finished]");
+	*/
+	load_idt();
+	ncClear();
+	_halt();
+
 	return 0;
 }
