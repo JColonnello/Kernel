@@ -2,7 +2,13 @@ OUTPUT_FORMAT("binary")
 ENTRY(loader)
 SECTIONS
 {
-	.text 0x100000 :
+	. = 0xFFFFFFFFC0100000;
+	.text_load :
+	{
+		*(.text_load*)
+	}
+	startOfKernel = .;
+	.text :
 	{
 		text = .;
 		*(.text*)
