@@ -17,8 +17,8 @@ typedef struct {
 #pragma pack(pop)		/* Reestablece la alinceación actual */
 
 
-
-DESCR_INT * idt = (DESCR_INT *) 0;	// IDT de 255 entradas
+extern void *startOfUniverse;
+extern DESCR_INT * idt = &startOfUniverse;	// IDT de 255 entradas
 
 static void setup_IDT_entry (int index, uint64_t offset);
 
@@ -30,7 +30,7 @@ void load_idt() {
 	//Solo interrupcion timer tick habilitadas
 	picMasterMask(0xFD); 
 	picSlaveMask(0xFF);
-        
+  
 	_sti();
 }
 

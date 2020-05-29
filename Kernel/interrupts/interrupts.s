@@ -15,10 +15,6 @@ GLOBAL _irq05Handler
 
 GLOBAL _exception0Handler
 
-IDTR64:					; Interrupt Descriptor Table Register
-	dw 256*16-1			; limit of IDT (size minus one) (4096 bytes - 1)
-	dq 0x0000000000000000		; linear address of IDT
-
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 

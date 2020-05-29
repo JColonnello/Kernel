@@ -2,8 +2,10 @@ OUTPUT_FORMAT("binary")
 ENTRY(loader)
 SECTIONS
 {
-	. = 0xFFFFFFFFC0100000;
-	.text_load :
+	startOfUniverse = 0xFFFFFFFFC0000000;
+	. = startOfUniverse;
+	vga = . + 0xA0000;
+	.text_load startOfUniverse + 0x100000 :
 	{
 		*(.text_load*)
 	}
