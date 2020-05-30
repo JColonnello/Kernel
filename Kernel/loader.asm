@@ -7,10 +7,10 @@ extern bss
 
 section .text_loader
 
-PML4_ADDR equ 0x50000
-PDP_ADDR equ 0x51000
-PD_ADDR equ 0x52000
-PT_ADDR equ 0x53000
+PML4_ADDR equ 0x2000
+PDP_ADDR equ 0x3000
+PD_ADDR equ 0x10000
+PT_ADDR equ 0x50000
 
 loader:
 	mov rcx, endOfKernel		; Calculate mapped space in pages
@@ -18,9 +18,9 @@ loader:
 	shr rcx, 12					; Divide by 4K
 	mov rdx, rcx				; Backup count
 
-	add rcx, 3			; Add 3 pages for PML4, PDP & PD
+	mov rcx, 512		; Clear page tables
 	xor rax, rax
-	mov rdi, PML4_ADDR	; Clear tables
+	mov rdi, PT_ADDR
 	rep stosq
 
 	mov rcx, rdx
@@ -53,14 +53,6 @@ load_PT:
 	mov rax, PDP_ADDR | 0x7
 	stosq
 
-	mov rdi, PDP_ADDR				; Create PDP entry 1
-	mov rax, PD_ADDR | 0x7
-	stosq
-
-	mov rdi, PML4_ADDR				; Create PML4 entry 1
-	mov rax, PDP_ADDR | 0x7
-	stosq
-
 	mov rax, PML4_ADDR | 0x8
 	mov cr3, rax					; Update CR3
 	add rsp, startOfUniverse		; Set stack to high half
@@ -69,13 +61,21 @@ load_PT:
 
 longJump:
 	; Unmap lower mirror
-	mov rdi, startOfUniverse + PDP_ADDR		; Delete PDP entry 1
+	
+	mov rcx, 511
+	mov rdi, startOfUniverse + PD_ADDR + 8	; Delete PD entries 2-512
 	xor rax, rax
-	stosq
+	rep stosq
 
-	mov rdi, startOfUniverse + PML4_ADDR	; Delete PML4 entry 1
+	mov rcx, 511
+	mov rdi, startOfUniverse + PDP_ADDR		; Delete PDP entries 1-511
 	xor rax, rax
-	stosq
+	rep stosq
+
+	mov rcx, 511
+	mov rdi, startOfUniverse + PML4_ADDR 	; Delete PML4 entry 1-511
+	xor rax, rax
+	rep stosq
 
 	mov rax, cr3
 	mov cr3, rax

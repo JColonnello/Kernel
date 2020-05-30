@@ -1,45 +1,41 @@
 #include <stdint.h>
-#include "defs.h"
 #include <naiveConsole.h>
+#include "idtLoader.h"
 #include "interrupts.h"
+#include "keyboard.h"
+#include "time.h"
 
-#pragma pack(push)		/* Push de la alineación actual */
-#pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
+extern void setupIDTHandlers();
+extern void defaultException();
+extern void defaultInterrupt();
 
-/* Descriptor de interrupcion */
-typedef struct {
-  uint16_t offset_l, selector;
-  uint8_t cero, access;
-  uint16_t offset_m;
-  uint32_t offset_h, other_cero;
-} DESCR_INT;
+int (*exceptionTable[32])(void) = 
+{
+    [0 ... 31] = defaultException
+}; 
 
-#pragma pack(pop)		/* Reestablece la alinceación actual */
+void (*irqTable[256-32])(void) = 
+{
+    [0 ... 255-32] = defaultInterrupt
+};
 
-
-extern void *startOfUniverse;
-extern DESCR_INT * idt = &startOfUniverse;	// IDT de 255 entradas
-
-static void setup_IDT_entry (int index, uint64_t offset);
+void setupIDTEntry(uint8_t entry, const void *handler)
+{
+    if(entry < 0x20)
+        exceptionTable[entry] = handler;
+    else
+        irqTable[entry - 0x20] = handler;
+}
 
 void load_idt() {
-  setup_IDT_entry (0x21, (uint64_t)&_irq01Handler);
-  setup_IDT_entry (0x00, (uint64_t)&_exception0Handler);
+    setupIDTHandlers();
 
+    // setupIDTEntry(0x20, timer_handler);
+    setupIDTEntry(0x21, keyboardHandler);
 
 	//Solo interrupcion timer tick habilitadas
 	picMasterMask(0xFD); 
 	picSlaveMask(0xFF);
   
 	_sti();
-}
-
-static void setup_IDT_entry (int index, uint64_t offset) {
-  idt[index].selector = 0x08;
-  idt[index].offset_l = offset & 0xFFFF;
-  idt[index].offset_m = (offset >> 16) & 0xFFFF;
-  idt[index].offset_h = (offset >> 32) & 0xFFFFFFFF;
-  idt[index].access = ACS_INT;
-  idt[index].cero = 0;
-  idt[index].other_cero = (uint64_t) 0;
 }

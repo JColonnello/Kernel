@@ -53,6 +53,21 @@ void ncPrintBase(uint64_t value, uint32_t base)
     ncPrint(buffer);
 }
 
+void ncPrintPointer(uint64_t value)
+{
+	//Calculate characters for each digit
+	for(int i = 15; i >= 0; i--, value >>= 4)
+	{
+		uint32_t remainder = value % 16;
+		buffer[i] = (remainder < 10) ? remainder + '0' : remainder + 'A' - 10;
+	}
+
+	// Terminate string in buffer.
+	buffer[16] = 0;
+    ncPrint(buffer);
+}
+
+
 void ncClear()
 {
 	int i;
