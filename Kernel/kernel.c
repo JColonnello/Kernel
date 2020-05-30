@@ -91,6 +91,7 @@ int main()
 	*/
 	load_idt();
 	ncClear();
+    _syscall();
 	_halt();
 
 	return 0;

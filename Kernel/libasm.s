@@ -1,6 +1,7 @@
 GLOBAL cpuVendor
 
 GLOBAL _halt
+global _syscall
 
 section .text
 	
@@ -31,3 +32,8 @@ cpuVendor:
 _halt:
 	hlt
 	jmp _halt
+
+_syscall:
+	mov rax, 1
+	int 80h
+	ret

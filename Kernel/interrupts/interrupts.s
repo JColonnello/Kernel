@@ -8,6 +8,7 @@ GLOBAL defaultException
 GLOBAL defaultInterrupt
 
 EXTERN irqTable
+EXTERN intTable
 EXTERN exceptionTable
 EXTERN startOfUniverse
 EXTERN ncPrintChar
@@ -73,7 +74,7 @@ _exception_%[i]_Handler:
 %endrep
 
 %assign i 0
-%rep 256 - 32
+%rep 0x30 - 0x20
 _irq_%[i]_Handler:
 	pushState
 	push qword i
@@ -81,6 +82,18 @@ _irq_%[i]_Handler:
 	; signal pic EOI (End of Interrupt)
 	mov al, 20h
 	out 20h, al
+	pop rax
+	popState
+	iretq
+%assign i i+1
+%endrep
+
+%assign i 0
+%rep 0x100 - 0x30
+_int_%[i]_Handler:
+	pushState
+	push qword i
+	call [intTable + 8 * i]
 	pop rax
 	popState
 	iretq
@@ -99,9 +112,18 @@ setupIDTHandlers:
 	%endrep
 
 	%assign i 0
-	%rep 256 - 32
+	%rep 0x30 - 0x20
 
 	mov rax, _irq_%[i]_Handler
+	call make_interrupt_gates
+	
+	%assign i i+1
+	%endrep
+
+	%assign i 0
+	%rep 0x100 - 0x30
+
+	mov rax, _int_%[i]_Handler
 	call make_interrupt_gates
 	
 	%assign i i+1
