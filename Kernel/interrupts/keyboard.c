@@ -1,7 +1,7 @@
 #include <naiveConsole.h>
 #include "keyboard.h"
 #include <types.h>
-#include <keyboard.h>
+#include "keyboard.h"
 
 extern u8 _getKeyCode();
 

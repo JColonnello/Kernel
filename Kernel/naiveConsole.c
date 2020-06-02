@@ -1,11 +1,13 @@
+#include <stdint.h>
 #include <naiveConsole.h>
+#include <loader.h>
 
 extern void vga;
 static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
 static char buffer[64] = { '0' };
-static uint8_t * const video = &vga + 0x18000;
-static uint8_t * currentVideo = &vga + 0x18000;
+static uint8_t * const video = &__vga + 0x18000;
+static uint8_t * currentVideo = &__vga + 0x18000;
 static const uint32_t width = 80;
 static const uint32_t height = 25 ;
 

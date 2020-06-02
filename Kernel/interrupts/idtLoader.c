@@ -12,20 +12,11 @@ extern void setupIDTHandlers();
 extern void defaultException();
 extern void defaultInterrupt();
 
-void (*exceptionTable[0x20])(void) = 
-{
-    [0 ... endOfArray(exceptionTable)] = defaultException
-}; 
+void (*exceptionTable[0x20])(void);
 
-void (*irqTable[0x30-0x20])(void) = 
-{
-    [0 ... endOfArray(irqTable)] = defaultInterrupt
-};
+void (*irqTable[0x30-0x20])(void);
 
-void (*intTable[0x100-0x30])(void) = 
-{
-    [0 ... endOfArray(intTable)] = defaultInterrupt
-};
+void (*intTable[0x100-0x30])(void);
 
 void setupIDTEntry(uint8_t entry, const void *handler)
 {
@@ -45,7 +36,6 @@ void load_idt() {
     setupIDTEntry (0x80, syscallHandler);
     // setupIDTEntry (0x00, (uint64_t)&_exception0Handler);
 
-	//Solo interrupcion timer tick habilitadas
 	picMasterMask(0xFD); 
 	picSlaveMask(0xFF);
   

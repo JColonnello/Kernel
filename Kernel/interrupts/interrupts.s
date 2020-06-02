@@ -10,7 +10,7 @@ GLOBAL defaultInterrupt
 EXTERN irqTable
 EXTERN intTable
 EXTERN exceptionTable
-EXTERN startOfUniverse
+EXTERN __startOfUniverse
 EXTERN ncPrintChar
 EXTERN ncPrint
 EXTERN ncPrintPointer
@@ -57,80 +57,116 @@ SECTION .text
 	pop rsp
 %endmacro
 
-%macro irqHandlerMaster 1
-	
-%endmacro
-
 %assign i 0
 %rep 0x20
 _exception_%[i]_Handler:
-	pushState
 	push qword i
-	call [exceptionTable + 8 * i]
-	pop rax
-	popState
-	iretq
+	jmp _exception_Handler
 %assign i i+1
 %endrep
+
+_exception_Handler:
+	pushState
+	mov rax, [rsp + 8 * 16] ; i
+	shl rax, 3
+	add rax, exceptionTable
+	mov rax, [rax]
+	test rax, rax
+	jnz .call
+	mov rax, defaultException
+.call:	
+	call rax
+	popState
+	pop rax
+	iretq
 
 %assign i 0
 %rep 0x30 - 0x20
 _irq_%[i]_Handler:
-	pushState
 	push qword i
-	call [irqTable + 8 * i]
+	jmp _irq_Handler
+%assign i i+1
+%endrep
+
+_irq_Handler:
+	pushState
+	mov rax, [rsp + 8 * 16] ; i
+	shl rax, 3
+	add rax, irqTable
+	mov rax, [rax]
+	test rax, rax
+	jnz .call
+	mov rax, defaultInterrupt
+.call:	
+	call rax
 	; signal pic EOI (End of Interrupt)
 	mov al, 20h
 	out 20h, al
-	pop rax
 	popState
+	pop rax
 	iretq
-%assign i i+1
-%endrep
 
 %assign i 0
 %rep 0x100 - 0x30
 _int_%[i]_Handler:
-	pushState
 	push qword i
-	call [intTable + 8 * i]
-	pop rax
-	popState
-	iretq
+	jmp _int_Handler
 %assign i i+1
 %endrep
 
+_int_Handler:
+	pushState
+	mov rax, [rsp + 8 * 16] ; i
+	shl rax, 3
+	add rax, intTable
+	mov rax, [rax]
+	test rax, rax
+	jnz .call
+	mov rax, defaultInterrupt
+.call:	
+	call rax
+	popState
+	pop rax
+	iretq
+
 setupIDTHandlers:
-	mov rdi, startOfUniverse
-	%assign i 0
+	mov rdi, __startOfUniverse
+	%assign i 0x20 - 1
 	%rep 0x20
-
-	mov rax, _exception_%[i]_Handler
+	push _exception_%[i]_Handler
+	%assign i i-1
+	%endrep
+	mov rcx, 0x20
+.loop1:
 	call make_exception_gates
+	pop rax
+	loop .loop1
 
-	%assign i i+1
-	%endrep
-
-	%assign i 0
+	%assign i 0x30 - 0x20 - 1
 	%rep 0x30 - 0x20
-
-	mov rax, _irq_%[i]_Handler
-	call make_interrupt_gates
-	
-	%assign i i+1
+	push _irq_%[i]_Handler
+	%assign i i-1
 	%endrep
+	mov rcx,  0x30 - 0x20
+.loop2:
+	call make_interrupt_gates
+	pop rax
+	loop .loop2
 
-	%assign i 0
+	%assign i 0x100 - 0x30 - 1
 	%rep 0x100 - 0x30
-
-	mov rax, _int_%[i]_Handler
-	call make_interrupt_gates
-	
-	%assign i i+1
+	push _int_%[i]_Handler
+	%assign i i-1
 	%endrep
+	mov rcx, 0x100 - 0x30
+.loop3:
+	call make_interrupt_gates
+	pop rax
+	loop .loop3
 	ret
 
 make_exception_gates: 			; make gates for exception handlers
+	mov rax, [rsp+8]
 	push rax			; save the exception gate to the stack for later use
 	stosw				; store the low word (15..0) of the address
 	mov ax, 0x08
@@ -147,6 +183,7 @@ make_exception_gates: 			; make gates for exception handlers
 	ret
 
 make_interrupt_gates: 			; make gates for the other interrupts
+	mov rax, [rsp+8]
 	push rax			; save the interrupt gate to the stack for later use
 	stosw				; store the low word (15..0) of the address
 	mov ax, 0x08
@@ -170,7 +207,7 @@ defaultException:
 	mov rdi, int_string
 	call ncPrint
 	mov rdi, exc_string
-	mov rax, [rsp+0x8]		; Exception number
+	mov rax, [rsp + 8*17]		; Exception number
 	and rax, 0xFF			; Clear out everything in RAX except for AL
 	shl rax, 3				; Quick multiply by 3
 	add rdi, rax			; Use the value in RAX as an offset to get to the right message
@@ -181,7 +218,7 @@ defaultException:
 	mov rdi, [rsp+0x8*18]	; RIP
 	call ncPrintPointer
 	call ncNewline
-	lea rdi, [rsp+0x10]		; RAX
+	lea rdi, [rsp+8]		; RAX
 	call os_dump_regs
 	jmp _hltForever
 
@@ -283,6 +320,3 @@ exc_string:
 	db '17 - AC', 0
 	db '18 - MC', 0
 	db '19 - XM', 0
-
-SECTION .bss
-	aux resq 1

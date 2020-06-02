@@ -1,20 +1,20 @@
 global loader
 extern main
 extern _init
-extern endOfKernel
-extern startOfUniverse
-extern bss
-
-section .text_loader
+extern __endOfKernel
+extern __startOfUniverse
+extern __bss
 
 PML4_ADDR equ 0x2000
 PDP_ADDR equ 0x3000
 PD_ADDR equ 0x10000
 PT_ADDR equ 0x50000
 
+section .text_loader
+
 loader:
-	mov rcx, endOfKernel		; Calculate mapped space in pages
-	sub rcx, startOfUniverse
+	mov rcx, __endOfKernel		; Calculate mapped space in pages
+	sub rcx, __startOfUniverse
 	shr rcx, 12					; Divide by 4K
 	mov rdx, rcx				; Backup count
 
@@ -26,17 +26,22 @@ loader:
 	mov rcx, rdx
 	mov rdi, PT_ADDR	; Reserve pages for kernel
 	mov rax, 0xF		; Add access flags and cache pass-through		
-load_PT:
+.load_PT:
 	stosq
 	add rax, 0x1000		; Add 4KiB
-	loop load_PT
+	loop .load_PT
 
 	; Add a trap page between kernel code and stack
 	and rax, ~0x1			; Remove present flag
 	stosq
 
-	add rax, 0x1000 | 0x7	; Reserve stack page
+	mov rcx, 16
+	or rax, 0x7	; Reserve stack page
+.loopStack
+	add rax, 0x1000
 	stosq
+	loop .loopStack
+
 	and rax, ~0xFFF			; Remove flags
 	add rax, 0x1000			; Add offset and go to end of page
 	mov rsp, rax
@@ -55,7 +60,7 @@ load_PT:
 
 	mov rax, PML4_ADDR | 0x8
 	mov cr3, rax					; Update CR3
-	add rsp, startOfUniverse		; Set stack to high half
+	add rsp, __startOfUniverse		; Set stack to high half
 	mov rax, longJump
 	jmp rax
 
@@ -63,26 +68,30 @@ longJump:
 	; Unmap lower mirror
 	
 	mov rcx, 511
-	mov rdi, startOfUniverse + PD_ADDR + 8	; Delete PD entries 2-512
+	mov rdi, __startOfUniverse + PD_ADDR + 8	; Delete PD entries 2-512
 	xor rax, rax
 	rep stosq
 
 	mov rcx, 511
-	mov rdi, startOfUniverse + PDP_ADDR		; Delete PDP entries 1-511
+	mov rdi, __startOfUniverse + PDP_ADDR		; Delete PDP entries 1-511
 	xor rax, rax
 	rep stosq
 
 	mov rcx, 511
-	mov rdi, startOfUniverse + PML4_ADDR 	; Delete PML4 entry 1-511
+	mov rdi, __startOfUniverse + PML4_ADDR 	; Delete PML4 entry 1-511
 	xor rax, rax
 	rep stosq
+
+	mov rdi, __startOfUniverse + PML4_ADDR + 510 * 8	; Create PML4 entry 511 for loopback
+	mov rax, PML4_ADDR | 0x3
+	stosq
 
 	mov rax, cr3
 	mov cr3, rax
 
 	; Point IDT descriptors to high half
 	mov rcx, 256
-	mov rdi, startOfUniverse
+	mov rdi, __startOfUniverse
 fixIDT:
 	add rdi, 6
 	mov ax, [rdi]
@@ -98,8 +107,8 @@ fixIDT:
 	lidt [IDTR64]
 
 clearBSS:
-	mov rdi, bss
-	mov rcx, endOfKernel
+	mov rdi, __bss
+	mov rcx, __endOfKernel
 	sub rcx, rdi
 	shr rcx, 3
 	xor rax, rax
@@ -115,7 +124,7 @@ hang:
 	jmp hang
 
 IDTR64: dw 256*16-1
-		dq startOfUniverse
+		dq __startOfUniverse
 
 GDTR64: dw 3 * 8 - 1
-		dq startOfUniverse + 0x1000
+		dq __startOfUniverse + 0x1000
