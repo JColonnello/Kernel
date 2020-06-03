@@ -1,8 +1,9 @@
 #include <stdint.h>
 #include <lib.h>
 #include <moduleLoader.h>
-#include <naiveConsole.h>
+#include <console.h>
 #include "interrupts/idtLoader.h"
+#include "loader.h"
 
 int main()
 {	
@@ -27,13 +28,15 @@ int main()
 	ncPrint("[Finished]");
 	*/
 	load_idt();
-	ncClear();
     //_syscall();
-	uint64_t *buf = kmap(NULL, NULL, NULL, 1);
-	ncPrintPointer(buf);
-	ncNewline();
-	*buf = 0xdeadc0de;
-	ncPrintHex(*buf);
+	int id = createConsoleView(2,2,5,20);
+	char text[] = "hola";
+	for(int i = 0;;i++)
+	{
+		text[0] = i;
+		viewWrite(id, text, sizeof(text));
+		for(int j = 0; j < 20000000; j++);
+	}
 	_halt();
 
 	return 0;

@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <lib.h>
-#include <naiveConsole.h>
 #include <loader.h>
 #include <pid.h>
 
@@ -9,7 +8,7 @@ extern const void *PDP_ADDR;
 extern const void *PD_ADDR;
 extern const void *PT_ADDR;
 //Bit field to map 4GB of RAM
-uint8_t physReservedPages[8<<30 / 0x1000 / 8];
+uint8_t physReservedPages[((uint64_t)4<<30) / 0x1000 / 8];
 
 size_t currVirtualPage[MAX_PID];
 
@@ -81,7 +80,7 @@ static void freePhysPage(int pos)
 
 void libInit()
 {
-	size_t firstFreePage = (&__endOfKernel - &__startOfUniverse) / 4096 + 16;
+	size_t firstFreePage = (&__endOfKernel - &__startOfUniverse) / 4096 + 16 + 1;
 	memset(physReservedPages, 0xFF, firstFreePage / 8);
 	uint8_t last = 0;
 	for(int i = 0; i < firstFreePage % 8; i++)
@@ -126,8 +125,6 @@ static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 	};
 	size_t count = 0;
 	//ProcessDescriptor cp = currentProcess();
-	ncPrintHex(va.ptoff);
-	ncNewline();
 	uintptr_t *pml4 = (uintptr_t*)lb.addr;
 	for(; va.pml4off < 512; va.pml4off++)
 	{
@@ -159,11 +156,9 @@ static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 				}
 				VirtualAddr pt = lb;
 				pt.pdpoff = va.pml4off, pt.pdoff = va.pdpoff, pt.ptoff = va.pdoff;
-				ncPrintPointer(pt.addr);
-				ncNewline();
 				for(; va.ptoff < 512; va.ptoff++)
 				{
-					pt.table[va.pdoff] = physMap[count++] | 0x7;
+					pt.table[va.ptoff] = physMap[count++] | 0x7;
 					if(count >= pageCount)
 						return;
 				}

@@ -3,6 +3,7 @@
 
 void _init()
 {
+	ncClear();
 	libInit();
 	return;
 }

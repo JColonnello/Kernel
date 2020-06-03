@@ -215,7 +215,7 @@ defaultException:
 	mov rdi, adr_string
 	call ncPrint
 	; Skip return address, exception number, 16 pushed regs
-	mov rdi, [rsp+0x8*18]	; RIP
+	mov rdi, [rsp+0x8*19]	; RIP
 	call ncPrintPointer
 	call ncNewline
 	lea rdi, [rsp+8]		; RAX

@@ -2,7 +2,6 @@
 #include <naiveConsole.h>
 #include <loader.h>
 
-extern void vga;
 static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
 static char buffer[64] = { '0' };
@@ -55,8 +54,9 @@ void ncPrintBase(uint64_t value, uint32_t base)
     ncPrint(buffer);
 }
 
-void ncPrintPointer(uint64_t value)
+void ncPrintPointer(void *pointer)
 {
+	uintptr_t value = (uintptr_t)pointer;
 	//Calculate characters for each digit
 	for(int i = 15; i >= 0; i--, value >>= 4)
 	{
