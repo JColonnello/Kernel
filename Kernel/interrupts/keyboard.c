@@ -1,4 +1,4 @@
-#include <naiveConsole.h>
+#include <console.h>
 #include "keyboard.h"
 #include <types.h>
 #include "keyboard.h"
@@ -131,6 +131,7 @@ static u8 scanCodes[256] =
 };
 
 #pragma region charMap
+
 #define NOP 0
 #define BTAB 0
 #define LCTR 0
@@ -188,7 +189,7 @@ static char charMap[256][8] = {
 /*19*/{  'p',   'P',  0x10,  0x10,   'p',   'P',  0x10,  0x10, },
 /*1a*/{  '[',   '{',  0x1B,  0x1B,   '[',   '{',  0x1B,  0x1B, },
 /*1b*/{  ']',   '}',  0x1D,  0x1D,   ']',   '}',  0x1D,  0x1D, },
-/*1c*/{ 0x0D,  0x0D,  0x0A,  0x0A,  0x0D,  0x0D,  0x0A,  0x0A, },
+/*1c*/{  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A, },
 /*1d*/{ LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR, },
 /*1e*/{  'a',   'A',  0x01,  0x01,   'a',   'A',  0x01,  0x01, },
 /*1f*/{  's',   'S',  0x13,  0x13,   's',   'S',  0x13,  0x13, },
@@ -289,22 +290,22 @@ void keyboardHandler()
     switch(code)
     {
         case SC_CTRL:
-            modStatus |= 4;
-            break;
-        case SC_CTRL + RELEASED:
-            modStatus &= ~4;
-            break;
-        case SC_ALT:
             modStatus |= 2;
             break;
-        case SC_ALT + RELEASED:
+        case SC_CTRL + RELEASED:
             modStatus &= ~2;
+            break;
+        case SC_ALT:
+            modStatus |= 4;
+            break;
+        case SC_ALT + RELEASED:
+            modStatus &= ~4;
             break;
         case SC_SHIFT: case SC_RIGHT_SHIFT:
             modStatus = capsLock ? modStatus & ~1 : modStatus | 1;
             break;
         case SC_CAPS_LOCK:
-            capsLock = !capsLock;   //break omitted in purpose
+            capsLock = !capsLock;   //break omitted on purpose
         case SC_SHIFT + RELEASED: case SC_RIGHT_SHIFT + RELEASED:
             modStatus = !capsLock ? modStatus & ~1 : modStatus | 1;
             break;
@@ -312,7 +313,11 @@ void keyboardHandler()
         {
             char c = charMap[code][modStatus];
             if(c)
-                ncPrintChar(c);
+                inputBufferWrite(c);
+            else if(code >= scanCodes[KEY_F1] && code <= scanCodes[KEY_F10])
+            {
+                changeFocus(code - scanCodes[KEY_F1]);
+            }
             break;
         }
     }

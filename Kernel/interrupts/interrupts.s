@@ -77,7 +77,7 @@ _exception_Handler:
 .call:	
 	call rax
 	popState
-	pop rax
+	add rsp, 8
 	iretq
 
 %assign i 0
@@ -103,7 +103,7 @@ _irq_Handler:
 	mov al, 20h
 	out 20h, al
 	popState
-	pop rax
+	add rsp, 8
 	iretq
 
 %assign i 0
@@ -126,7 +126,7 @@ _int_Handler:
 .call:	
 	call rax
 	popState
-	pop rax
+	add rsp, 8
 	iretq
 
 setupIDTHandlers:

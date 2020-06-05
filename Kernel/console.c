@@ -1,4 +1,6 @@
+#include "interrupts/interrupts.h"
 #include <console.h>
+#include <stddef.h>
 #include <loader.h>
 #include <lib.h>
 #include <naiveConsole.h>
@@ -51,11 +53,16 @@ typedef struct
     size_t lineCount;
     size_t lineCursor;
     size_t maxLines;
+    char *input;
+    size_t inputStart;
+    size_t inputCount;
+    size_t maxInput;
 } ConsoleView;
 
 static CharEntry (*video)[25][80] = &__vga + 0x18000;
 static ConsoleView views[8];
 static const char defaultColor = 0x07;
+int focusedView = 0;
 
 int createConsoleView(int startY, int startX, int height, int width)
 {
@@ -79,6 +86,8 @@ int createConsoleView(int startY, int startX, int height, int width)
     {
         view.lines[i] = (CharEntry){ .color.code = defaultColor, .symbol = 0 };
     }
+    view.input = kmap(NULL, NULL, NULL, 1);
+    view.maxInput = 4096;
 
     views[id] = view;
 
@@ -105,28 +114,85 @@ void viewflush(int id)
 void viewLF(int id)
 {
     ConsoleView *view = &views[id];
+    CharEntry (*buf)[view->maxLines][view->width] = (void*)view->lines;
     
+    view->lineEnd++;
+    view->lineCursor = 0;
+    view->lineCount++;
+    for(int j = 0; j < view->width; j++)
+        (*buf)[view->lineEnd][j] = (CharEntry){ .color.code = defaultColor, .symbol = 0 };
+
+    if(view->lineCount > view->maxLines)
+            view->lineCount = view->maxLines;
+    if(view->lineEnd > view->maxLines)
+        view->lineEnd %= view->maxLines;
 }
 
-void viewWrite(int id, const char *text, size_t n)
+int viewWrite(int id, const char *text, size_t n)
 {
     ConsoleView *view = &views[id];
     CharEntry (*buf)[view->maxLines][view->width] = (void*)view->lines;
 
-    for(int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++, text++)
     {
-        if(view->lineCursor == view->width)
+        if(view->lineCursor >= view->width)
+            viewLF(id);
+        
+        char c = *text;
+        //Control character
+        if(c < 0x20)
         {
-            view->lineEnd = (view->lineEnd + 1) % view->maxLines;
-            view->lineCursor = 0;
-            view->lineCount++;
-            for(int j = 0; j < view->width; j++)
-                (*buf)[view->lineEnd][j] = (CharEntry){ .color.code = defaultColor, .symbol = 0 };
+            switch (c) {
+                case '\n':
+                    viewLF(id);
+                    break;
+                case '\t':
+                    view->lineCursor += 4 - view->lineCursor % 4;
+                    break;
+                case '\r':
+                    view->lineCursor = 0;
+                    break;
+            }
         }
-        if(view->lineCount > view->maxLines)
-            view->lineCount = view->maxLines;
-
-        (*buf)[view->lineEnd][view->lineCursor++].symbol = text[i];
+        else
+            (*buf)[view->lineEnd][view->lineCursor++].symbol = *text;
     }
     viewflush(id);
+
+    return n;
+}
+
+void inputBufferWrite(char c)
+{
+    ConsoleView *view = &views[focusedView];
+
+    if(view->inputCount < view->maxInput)
+        view->input[(view->inputStart + view->inputCount++) % view->maxInput] = c;
+
+    viewWrite(focusedView, &c, 1);
+}
+
+int inputBufferRead(int id, char *dest, size_t count)
+{
+    ConsoleView *view = &views[focusedView];
+    int i;
+    
+    if(view->input == NULL)
+        return 0;
+
+    for(i = 0; i < count && view->inputCount > 0; i++, view->inputCount--)
+    {
+        dest[i] = view->input[view->inputStart++];
+        if(view->inputStart == view->maxInput)
+            view->inputStart = 0;
+    }
+
+    return i;
+}
+
+
+void changeFocus(int id)
+{
+    if(views[id].lines != NULL)
+        focusedView = id;
 }

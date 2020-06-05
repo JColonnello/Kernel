@@ -7,6 +7,7 @@ typedef struct
 {
     uintptr_t pml4;
     unsigned pid;
+    int tty;
 } ProcessDescriptor;
 
 ProcessDescriptor currentProcess();

@@ -27,16 +27,8 @@ int main()
 
 	ncPrint("[Finished]");
 	*/
-	load_idt();
-    //_syscall();
-	int id = createConsoleView(2,2,5,20);
-	char text[] = "hola";
-	for(int i = 0;;i++)
-	{
-		text[0] = i;
-		viewWrite(id, text, sizeof(text));
-		for(int j = 0; j < 20000000; j++);
-	}
+	int id = createConsoleView(0,0,5,20);
+	createConsoleView(0,40,10,10);
 	_halt();
 
 	return 0;
