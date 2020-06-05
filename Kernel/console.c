@@ -64,6 +64,13 @@ static ConsoleView views[8];
 static const char defaultColor = 0x07;
 int focusedView = 0;
 
+void ncClear()
+{
+    CharEntry *p = (CharEntry*)video;
+    for(int i = 0; i < sizeof(*video); i++)
+        *p++ = (CharEntry){ .color.code = defaultColor, .symbol = 0 };
+}
+
 int createConsoleView(int startY, int startX, int height, int width)
 {
     int id;
@@ -195,4 +202,95 @@ void changeFocus(int id)
 {
     if(views[id].lines != NULL)
         focusedView = id;
+}
+
+static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
+
+static char buffer[64] = { '0' };
+
+void ncPrint(const char * string)
+{
+	int i;
+
+	for (i = 0; string[i] != 0; i++)
+		ncPrintChar(string[i]);
+}
+
+void ncPrintChar(char character)
+{
+	viewWrite(focusedView, &character, 1);
+}
+
+void ncNewline()
+{
+	viewLF(focusedView);
+}
+
+void ncPrintDec(uint64_t value)
+{
+	ncPrintBase(value, 10);
+}
+
+void ncPrintHex(uint64_t value)
+{
+	ncPrintBase(value, 16);
+}
+
+void ncPrintBin(uint64_t value)
+{
+	ncPrintBase(value, 2);
+}
+
+void ncPrintBase(uint64_t value, uint32_t base)
+{
+    uintToBase(value, buffer, base);
+    ncPrint(buffer);
+}
+
+void ncPrintPointer(void *pointer)
+{
+	uintptr_t value = (uintptr_t)pointer;
+	//Calculate characters for each digit
+	for(int i = 15; i >= 0; i--, value >>= 4)
+	{
+		uint32_t remainder = value % 16;
+		buffer[i] = (remainder < 10) ? remainder + '0' : remainder + 'A' - 10;
+	}
+
+	// Terminate string in buffer.
+	buffer[16] = 0;
+    ncPrint(buffer);
+}
+
+static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base)
+{
+	char *p = buffer;
+	char *p1, *p2;
+	uint32_t digits = 0;
+
+	//Calculate characters for each digit
+	do
+	{
+		uint32_t remainder = value % base;
+		*p++ = (remainder < 10) ? remainder + '0' : remainder + 'A' - 10;
+		digits++;
+	}
+	while (value /= base);
+
+	// Terminate string in buffer.
+	*p = 0;
+
+	//Reverse string in buffer.
+	p1 = buffer;
+	p2 = p - 1;
+	while (p1 < p2)
+	{
+		char tmp = *p1;
+		*p1 = *p2;
+		*p2 = tmp;
+		p1++;
+		p2--;
+	}
+
+	return digits;
 }

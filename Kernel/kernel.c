@@ -4,6 +4,7 @@
 #include <console.h>
 #include "interrupts/idtLoader.h"
 #include "loader.h"
+#include "naiveConsole.h"
 
 int main()
 {	
@@ -27,8 +28,21 @@ int main()
 
 	ncPrint("[Finished]");
 	*/
-	int id = createConsoleView(0,0,5,20);
-	createConsoleView(0,40,10,10);
+	createConsoleView(0,0,25,80);
+	char *test = kmalloc(0x10);
+	memcpy(test, "prueba\n", 8);
+	ncPrint(test);
+	ncPrintPointer(test);
+	ncNewline();
+	char *test2 = kmalloc(0x20);
+	ncPrintPointer(test2);
+	ncNewline();
+	kfree(test);
+	kfree(test2);
+	test = kmalloc(0x30);
+	ncPrintPointer(test);
+	kfree(test);
+
 	_halt();
 
 	return 0;

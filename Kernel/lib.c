@@ -1,14 +1,19 @@
+#include "interrupts/interrupts.h"
+#include "naiveConsole.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <lib.h>
 #include <loader.h>
 #include <pid.h>
+
+#define PAGE_SIZE 0x1000
 
 extern const void *PML4_ADDR;
 extern const void *PDP_ADDR;
 extern const void *PD_ADDR;
 extern const void *PT_ADDR;
 //Bit field to map 4GB of RAM
-uint8_t physReservedPages[((uint64_t)4<<30) / 0x1000 / 8];
+uint8_t physReservedPages[((uint64_t)4<<30) / PAGE_SIZE / 8];
 
 size_t currVirtualPage[MAX_PID];
 
@@ -63,8 +68,12 @@ void * memcpy(void * destination, const void * source, size_t length)
 
 static uintptr_t reservePhysPage()
 {
+	const size_t pageFieldSize = sizeof(physReservedPages);
 	int pos = 0, i;
-	for(i = 0; physReservedPages[i] == 0xFF; i++, pos += 8) ;
+	for(i = 0; physReservedPages[i] == 0xFF && i < pageFieldSize; i++, pos += 8) ;
+	if(i == pageFieldSize)
+		return -1;
+
 	uint8_t chunk = physReservedPages[i];
 	int off;
 	for(off = 0; chunk & 1; chunk >>= 1, off++, pos++) ;
@@ -80,7 +89,7 @@ static void freePhysPage(int pos)
 
 void libInit()
 {
-	size_t firstFreePage = (&__endOfKernel - &__startOfUniverse) / 4096 + 16 + 1;
+	size_t firstFreePage = (&__endOfKernel - &__startOfUniverse) / PAGE_SIZE + 16 + 1;
 	memset(physReservedPages, 0xFF, firstFreePage / 8);
 	uint8_t last = 0;
 	for(int i = 0; i < firstFreePage % 8; i++)
@@ -181,4 +190,80 @@ void *kmap(void **virtual, const void *hint, void **physical, size_t pageCount)
 		return (void*)hint;
 	}
 	return NULL;
+}
+
+typedef struct MallocNode MallocNode;
+struct MallocNode
+{
+	size_t size;
+	bool used;
+	MallocNode *next;
+	char block[];
+};
+
+MallocNode *firstNode = NULL;
+
+void *kmalloc(size_t size)
+{
+	MallocNode **lastNode = &firstNode;
+
+	while(*lastNode != NULL)
+	{
+		MallocNode *node = *lastNode;
+		if(!node->used && node->size >= size)
+		{
+			node->used = true;
+			size_t dif = node->size - size;
+			if(dif > sizeof(MallocNode))
+			{
+				MallocNode *newNode = (MallocNode*)&node->block[size];
+				newNode->size = dif - sizeof(MallocNode);
+				newNode->used = false;
+				newNode->next = node->next;
+				node->next = newNode;
+			}
+			return node->block;
+		}
+		//Next node is unused and contiguous
+		if(!node->used && node->next == (MallocNode*)&node->block[node->size] && !node->next->used)
+		{
+			MallocNode *next = node->next;
+			node->size += next->size + sizeof(MallocNode);
+			node->next = next->next;
+			//Avoid address leak
+			*next = (MallocNode){ 0 };
+			//Try again
+			continue;
+		}
+		lastNode = &node->next;
+	}
+	//No free block found. We have to reserve new pages
+	int pages = (size + sizeof(MallocNode) + PAGE_SIZE - 1) / PAGE_SIZE;
+	MallocNode *node = kmap(NULL, NULL, NULL, pages);
+	MallocNode *postNode = (void*)&node->block[size];
+	postNode->size = pages * PAGE_SIZE - sizeof(MallocNode) * 2 - size;
+	postNode->used = false;
+	postNode->next = NULL;
+	node->size = size;
+	node->used = true;
+	node->next = postNode;
+	*lastNode = node;
+	return node->block;
+}
+
+void kfree(void *ptr)
+{
+	MallocNode **lastNode = &firstNode;
+
+	while(*lastNode != NULL)
+	{
+		MallocNode *node = *lastNode;
+		if(node->block == ptr)
+		{
+			node->used = false;
+			return;
+		}
+		lastNode = &node->next;
+	}
+	ncPrint("Bad free\n");
 }
