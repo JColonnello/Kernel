@@ -7,18 +7,21 @@ SOURCES_ASM=$(shell find . -name "*.s")
 OBJECTS=$(SOURCES:%.c=$(BUILD_DIR)/%.c.o)
 OBJECTS_ASM=$(SOURCES_ASM:%.s=$(BUILD_DIR)/%.s.o)
 LOADERSRC=loader.asm
+INC_DIRS = ./include ../BMFS/include
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+BMFS_LIB = ../BMFS/libbmfs.a
 
 LOADEROBJECT=$(LOADERSRC:%.asm=$(BUILD_DIR)/%.o)
 STATICLIBS=
 
 all: $(BUILD_DIR)/$(KERNEL)
 
-$(BUILD_DIR)/$(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM)
+$(BUILD_DIR)/$(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM) $(BMFS_LIB)
 	$(LD) $(LDFLAGS) -T kernel.ld -o $@ $^
 
 $(BUILD_DIR)/%.c.o: %.c
 	$(MKDIR_P) $(dir $@)
-	$(GCC) $(GCCFLAGS) -I./include -c $< -o $@
+	$(GCC) $(GCCFLAGS) $(INC_FLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.s.o : %.s
 	$(MKDIR_P) $(dir $@)

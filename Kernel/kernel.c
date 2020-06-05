@@ -29,9 +29,9 @@ int main()
 	ncPrint("[Finished]");
 	*/
 	createConsoleView(0,0,25,80);
-	char buf[10];
-	_syscall(0, buf, 5);
-	write(1, buf, 5);
+	diskInit();
+	show_file("test");
+
 
 	_halt();
 
