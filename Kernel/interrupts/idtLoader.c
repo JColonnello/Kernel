@@ -2,7 +2,7 @@
 #include <naiveConsole.h>
 #include "idtLoader.h"
 #include "interrupts.h"
-#include "../syslib.h"
+#include <syslib.h>
 #include "keyboard.h"
 #include "time.h"
 

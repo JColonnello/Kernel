@@ -187,8 +187,11 @@ int inputBufferRead(int id, char *dest, size_t count)
     if(view->input == NULL)
         return 0;
 
-    for(i = 0; i < count && view->inputCount > 0; i++, view->inputCount--)
+    for(i = 0; i < count; i++, view->inputCount--)
     {
+        while(view->inputCount == 0)
+            _hlt();
+
         dest[i] = view->input[view->inputStart++];
         if(view->inputStart == view->maxInput)
             view->inputStart = 0;
@@ -207,6 +210,11 @@ void changeFocus(int id)
 static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
 static char buffer[64] = { '0' };
+
+void ncWrite(const char *buf, size_t n)
+{
+	viewWrite(focusedView, buf, n);
+}
 
 void ncPrint(const char * string)
 {

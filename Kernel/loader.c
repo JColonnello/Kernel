@@ -1,6 +1,9 @@
 #include <loader.h>
 #include <lib.h>
 #include <pid.h>
+#include <naiveConsole.h>
+
+extern void load_idt();
 
 void _init()
 {

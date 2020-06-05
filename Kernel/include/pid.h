@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include <syslib.h>
+
 #define MAX_PID 64
 
 typedef struct
@@ -8,6 +10,8 @@ typedef struct
     uintptr_t pml4;
     unsigned pid;
     int tty;
+    FileDescriptor *fd;
+    size_t fdtSize;
 } ProcessDescriptor;
 
 ProcessDescriptor currentProcess();

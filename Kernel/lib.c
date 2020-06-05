@@ -267,3 +267,11 @@ void kfree(void *ptr)
 	}
 	ncPrint("Bad free\n");
 }
+
+void *kcalloc(size_t nmemb, size_t size)
+{
+	void *mem = kmalloc(nmemb * size);
+	if(mem)
+		memset(mem, 0, nmemb * size);
+	return mem;
+}

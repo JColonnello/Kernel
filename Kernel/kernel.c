@@ -2,9 +2,9 @@
 #include <lib.h>
 #include <moduleLoader.h>
 #include <console.h>
-#include "interrupts/idtLoader.h"
-#include "loader.h"
 #include "naiveConsole.h"
+
+extern int _syscall(int,void*,size_t);
 
 int main()
 {	
@@ -29,19 +29,9 @@ int main()
 	ncPrint("[Finished]");
 	*/
 	createConsoleView(0,0,25,80);
-	char *test = kmalloc(0x10);
-	memcpy(test, "prueba\n", 8);
-	ncPrint(test);
-	ncPrintPointer(test);
-	ncNewline();
-	char *test2 = kmalloc(0x20);
-	ncPrintPointer(test2);
-	ncNewline();
-	kfree(test);
-	kfree(test2);
-	test = kmalloc(0x30);
-	ncPrintPointer(test);
-	kfree(test);
+	char buf[10];
+	_syscall(0, buf, 5);
+	write(1, buf, 5);
 
 	_halt();
 

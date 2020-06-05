@@ -39,6 +39,6 @@ _halt:
 	jmp _halt
 
 _syscall:
-	mov rax, 1
+	mov rax, 0
 	int 80h
 	ret
