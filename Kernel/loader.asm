@@ -1,4 +1,5 @@
 global loader
+global clearBSS
 extern main
 extern _init
 extern __endOfKernel
@@ -92,7 +93,7 @@ longJump:
 	; Point IDT descriptors to high half
 	mov rcx, 256
 	mov rdi, __startOfUniverse
-fixIDT:
+.fixIDT:
 	add rdi, 6
 	mov ax, [rdi]
 	or ax, 0xC000
@@ -101,10 +102,18 @@ fixIDT:
 	add rdi, 2
 	mov [rdi], dword 0xFFFFFFFF
 	add rdi, 8
-	loop fixIDT
+	loop .fixIDT
 	; Reload GDT & IDT
 	lgdt [GDTR64]
 	lidt [IDTR64]
+
+.finish
+	mov rdi, _init
+	call rdi
+.hang:
+	cli
+	hlt	; halt machine should kernel return
+	jmp .hang
 
 clearBSS:
 	mov rdi, __bss
@@ -113,16 +122,6 @@ clearBSS:
 	shr rcx, 3
 	xor rax, rax
 	rep stosq
-
-	mov rdi, _init
-	call rdi
-	mov rdi, main
-	call rdi
-hang:
-	cli
-	hlt	; halt machine should kernel return
-	jmp hang
-
 IDTR64: dw 256*16-1
 		dq __startOfUniverse
 

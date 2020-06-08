@@ -4,6 +4,7 @@
 #include <naiveConsole.h>
 
 extern void load_idt();
+extern int main();
 
 void _init()
 {
@@ -16,5 +17,6 @@ void _init()
 		.tty = 0
 	};
 	createProcess(&desc);
+	main();
 	return;
 }

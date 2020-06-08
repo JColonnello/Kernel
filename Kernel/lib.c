@@ -6,14 +6,13 @@
 #include <loader.h>
 #include <pid.h>
 
-#define PAGE_SIZE 0x1000
-
 extern const void *PML4_ADDR;
 extern const void *PDP_ADDR;
 extern const void *PD_ADDR;
 extern const void *PT_ADDR;
 //Bit field to map 4GB of RAM
 uint8_t physReservedPages[((uint64_t)4<<30) / PAGE_SIZE / 8];
+static size_t firstFreePage;
 
 size_t currVirtualPage[MAX_PID];
 
@@ -82,14 +81,16 @@ static uintptr_t reservePhysPage()
 	return pos << 12;
 }
 
-static void freePhysPage(int pos)
+static void freePhysPage(size_t idx)
 {
-	physReservedPages[pos / 8] &= ~(1 << (pos % 8));
+	if(idx / 8 >= sizeof(physReservedPages))
+		return;
+	physReservedPages[idx / 8] &= ~(1 << (idx % 8));
 }
 
 void libInit()
 {
-	size_t firstFreePage = (&__endOfKernel - &__startOfUniverse) / PAGE_SIZE + 16 + 1;
+	firstFreePage = (&__endOfKernel - &__startOfUniverse) / PAGE_SIZE + 16 + 1;
 	memset(physReservedPages, 0xFF, firstFreePage / 8);
 	uint8_t last = 0;
 	for(int i = 0; i < firstFreePage % 8; i++)
@@ -176,20 +177,51 @@ static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 	}
 }
 
+void kunmap(void *virtual, size_t pageCount)
+{
+	for(int i = 0; i < pageCount; i++)
+	{
+		VirtualAddr addr = { .addr = (uintptr_t)virtual };
+		VirtualAddr pt = {
+			.sign = -1,
+			.pml4off = 0x1FE,
+			.pdpoff = addr.pml4off,
+			.pdoff = addr.pdpoff,
+			.ptoff = addr.pdoff,
+			.poff = 0,
+		};
+		size_t physPage = pt.table[addr.ptoff] >> 12;
+		if(physPage >= firstFreePage)
+			freePhysPage(physPage);
+		pt.table[addr.ptoff] = 0;
+	}
+}
+
 void *kmap(void **virtual, const void *hint, void **physical, size_t pageCount)
 {
-	if(virtual == NULL && physical == NULL)
+	uintptr_t phyPages[pageCount];
+	if(physical == NULL)
 	{
-		ProcessDescriptor cp = currentProcess();
-		uintptr_t hint = currVirtualPage[cp.pid] << 12;
-		uintptr_t phyPages[pageCount];
 		for(int i = 0; i < pageCount; i++)
 			phyPages[i] = reservePhysPage();
-		map(hint, phyPages, pageCount);
-		currVirtualPage[cp.pid] += pageCount;
-		return (void*)hint;
 	}
-	return NULL;
+	else
+		for(int i = 0; i < pageCount; i++)
+			phyPages[i] = (uintptr_t)*physical + PAGE_SIZE * i;
+
+	uintptr_t dest;
+	if(virtual == NULL)
+	{
+		ProcessDescriptor *cp = currentProcess();
+		dest = currVirtualPage[cp->pid] << 12;
+		currVirtualPage[cp->pid] += pageCount;
+	}
+	else
+		dest = (uintptr_t)*virtual;
+
+	map(dest, phyPages, pageCount);
+
+	return (void*)dest;
 }
 
 typedef struct MallocNode MallocNode;

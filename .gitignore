@@ -11,4 +11,5 @@
 #Object files
 *.o
 
+Image/.image
 compile_commands.json

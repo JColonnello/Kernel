@@ -1,4 +1,5 @@
-OUTPUT_FORMAT("binary")
+SEARCH_DIR("../../libc/")
+STARTUP("crt0.o")
 ENTRY(_start)
 SECTIONS
 {

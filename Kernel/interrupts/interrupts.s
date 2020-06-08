@@ -77,7 +77,7 @@ _exception_Handler:
 .call:	
 	call rax
 	popState
-	add rsp, 8
+	add rsp, 8	;pop i
 	iretq
 
 %assign i 0
@@ -103,7 +103,7 @@ _irq_Handler:
 	mov al, 20h
 	out 20h, al
 	popState
-	add rsp, 8
+	add rsp, 8	;pop i
 	iretq
 
 %assign i 0
@@ -125,8 +125,11 @@ _int_Handler:
 	mov rax, defaultInterrupt
 .call:	
 	call rax
-	popState
+	; replace stored rax for returned value
 	add rsp, 8
+	push rax
+	popState
+	add rsp, 8	;pop i
 	iretq
 
 setupIDTHandlers:
@@ -226,11 +229,6 @@ _hltForever:
 	cli
 	hlt
 	jmp _hltForever
-
-_hlt:
-	sti
-	hlt
-	ret
 
 _cli:
 	cli

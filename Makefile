@@ -1,7 +1,7 @@
 SUBDIRS := $(wildcard */.)
 MAKE := make --no-print-directory
 
-all: bmfs bootloader kernel userland image
+all: bmfs bootloader libc kernel userland image
 
 rebuild: clean all
 
@@ -14,6 +14,9 @@ bootloader:
 kernel:
 	$(MAKE) -C Kernel
 
+libc:
+	$(MAKE) -C libc
+
 userland:
 	$(MAKE) -C Userland
 
@@ -24,7 +27,8 @@ clean:
 	$(MAKE) -C BMFS clean
 	$(MAKE) -C Bootloader clean
 	$(MAKE) -C Kernel clean
+	$(MAKE) -C libc clean
 	$(MAKE) -C Userland clean
 	$(MAKE) -C Image clean
 
-.PHONY: bootloader image collections kernel userland bmfs all clean
+.PHONY: bootloader image collections kernel userland libc bmfs all clean

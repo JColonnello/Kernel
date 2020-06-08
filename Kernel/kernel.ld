@@ -22,7 +22,7 @@ SECTIONS
 	{
 		__data = .;
 		*(.data*)
-		endOfKernelBinary = .;
+		__endOfKernelBinary = .;
 	}
 	.bss ALIGN(0x1000) : AT(ADDR(.bss))
 	{

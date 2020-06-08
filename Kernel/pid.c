@@ -7,9 +7,9 @@ ProcessDescriptor descriptors[MAX_PID];
 bool inUse[MAX_PID];
 int currentPID;
 
-ProcessDescriptor currentProcess()
+ProcessDescriptor *currentProcess()
 {
-    return descriptors[currentPID];
+    return &descriptors[currentPID];
 }
 
 int createProcess(ProcessDescriptor *pd)

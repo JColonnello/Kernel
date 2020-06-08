@@ -9,23 +9,26 @@ VMDK=$(OSIMAGENAME).vmdk
 QCOW2=$(OSIMAGENAME).qcow2
 IMG=$(OSIMAGENAME).img
 KERNEL=../Kernel/build/kernel.bin
-USERLAND= #../Userland/0000-sampleCodeModule.bin ../Userland/0001-sampleDataModule.bin
+USERLAND= ../Userland
+USERLAND_BIN = $(shell find $(USERLAND) -name *.bin)
 
-PACKEDKERNEL=packedKernel.bin
 IMGSIZE=6291456
 
-all: $(IMG) $(VMDK) $(QCOW2)
+all: $(IMG) $(USERLAND_BIN) $(VMDK) $(QCOW2)
 
 $(KERNEL):
 	cd ../Kernel; make
 
-$(PACKEDKERNEL): $(KERNEL) $(USERLAND)
-	$(MP) $(KERNEL) $(USERLAND) -o $(PACKEDKERNEL)
+$(IMG): $(BMFS) $(MBR) $(PURE64) $(KERNEL)
+	$(BMFS) $(IMG) initialize $(IMGSIZE) $(MBR) $(PURE64) $(KERNEL) 
+	$(BMFS_NEW) -d $(IMG) format -s $(IMGSIZE) -b 512
+	$(BMFS_NEW) -d $(IMG) mkdir userland
+	@touch .image
 
-$(IMG): $(BMFS) $(MBR) $(PURE64) $(PACKEDKERNEL)
-	$(BMFS) $(IMG) initialize $(IMGSIZE) $(MBR) $(PURE64) $(PACKEDKERNEL) 
-	$(BMFS_NEW) -d $(IMG) format -b 512
-	$(BMFS_NEW) -d $(IMG) cp test.txt test
+$(USERLAND)/%.bin: .image
+	@echo Copying $@...
+	$(BMFS_NEW) -d $(IMG) cp $@ userland/$*.bin
+	@touch $@
 
 $(VMDK): $(IMG)
 	qemu-img convert -f raw -O vmdk $(IMG) $(VMDK) 

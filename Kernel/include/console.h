@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <naiveConsole.h>
 
 int createConsoleView(int startY, int startX, int height, int width);
 void viewflush(int id);

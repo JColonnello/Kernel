@@ -7,6 +7,7 @@
 #include <bmfs/file.h>
 #include "host.h"
 #include "lib.h"
+#include "syslib.h"
 
 #define SECTOR_SIZE 512
 
@@ -59,12 +60,12 @@ int ata_seek(void *disk_ptr, bmfs_uint64 offset, int whence)
 		if (offset > disk->size)
 			disk->pos = disk->size;
 		else
-			disk->pos = disk->offset + offset;
+			disk->pos = offset;
 	}
 	else if (whence == BMFS_SEEK_END)
 	{
-		if (offset > disk->size - disk->offset)
-			disk->pos = disk->offset;
+		if (offset > disk->size)
+			disk->pos = 0;
 		else
 			disk->pos = disk->size - offset;
 	}
@@ -95,7 +96,7 @@ int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
     //If current position is not sector alligned
     if((disk->pos % SECTOR_SIZE) != 0)
     {
-        disk_read(disk->buffer, disk->pos / SECTOR_SIZE, 1);
+        disk_read(disk->buffer, (disk->pos + disk->offset) / SECTOR_SIZE, 1);
         size_t segment = disk->pos % SECTOR_SIZE;
         size_t toRead = SECTOR_SIZE - segment;
         if(toRead > remain)
@@ -106,13 +107,11 @@ int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
         buf += toRead;
         remain -= toRead;
     }
-    while(remain >= SECTOR_SIZE)
+    if(remain >= SECTOR_SIZE)
     {
         size_t nSectors = remain / SECTOR_SIZE;
-        if(nSectors > 255)
-            nSectors = 255;
 
-        disk_read(buf, disk->pos / SECTOR_SIZE, nSectors);
+        disk_read(buf, (disk->pos + disk->offset) / SECTOR_SIZE, nSectors);
         size_t bytes = nSectors * SECTOR_SIZE;
         disk->pos += bytes;
         remain -= bytes;
@@ -121,7 +120,7 @@ int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
     //Read remaining
     if(remain)
     {
-        disk_read(disk->buffer, disk->pos / SECTOR_SIZE, 1);
+        disk_read(disk->buffer, (disk->pos + disk->offset) / SECTOR_SIZE, 1);
         memcpy(buf, disk->buffer, remain);
         disk->pos += remain;
     }
@@ -138,7 +137,7 @@ struct BMFSDisk disk;
 void diskInit()
 {
     bmfs_disk_init(&disk);
-    data.buffer = kmalloc(512);
+    data.buffer = kmalloc(SECTOR_SIZE);
     disk.DiskPtr = &data;
     disk.seek = ata_seek;
     disk.read = ata_read;
@@ -156,46 +155,54 @@ void diskInit()
     }
 }
 
-int show_file(const char *path) 
+static int readFile(FileDescriptorData *data, void *buf, size_t count)
 {
-   
-    /* Initialize disk here. */
+    struct BMFSFile *file = (void*)data;
+    bmfs_uint64 read_count;
+    int err = bmfs_file_read(file, buf, count, &read_count);
+    if(err)
+        return err;
+    return read_count;
+}
 
-    /* Initialize file system header. */
+static int writeFile(FileDescriptorData *data, const void *buf, size_t count)
+{
+    struct BMFSFile *file = (void*)data;
+    bmfs_uint64 read_count;
+    int err = bmfs_file_write(file, buf, count, &read_count);
+    if(err)
+        return err;
+    return read_count;
+}
 
-    struct BMFSFile file;
+static int closeFile(FileDescriptorData *data)
+{
+    struct BMFSFile *file = (void*)data;
+    bmfs_file_close(file);
+    kfree(data);
+    return 0;
+}
 
-    bmfs_file_init(&file);
 
-    int err = bmfs_open_file(&bmfs, &file, path);
-    if (err == BMFS_ENOENT) {
-        ncPrint("Entry does not exist.\n");
-    } else if (err == BMFS_EISDIR) {
-        ncPrint("Entry is a directory.\n");
-    } else if (err != 0) {
-        ncPrint("Failed to open.\n");
-        return -1;
-    }
-
-    bmfs_file_set_mode(&file, BMFS_FILE_MODE_READ);
-
-    char buf[512];
-
-    while (!bmfs_file_eof(&file)) 
+int openFile(FileDescriptor *fd, const char *path, int mode)
+{
+    struct BMFSFile *file = kmalloc(sizeof(struct BMFSFile));
+    bmfs_file_init(file);
+    int err = bmfs_open_file(&bmfs, file, path);
+    if(err != 0)
     {
-
-        bmfs_uint64 read_count = 0;
-
-        err = bmfs_file_read(&file, buf, 512, &read_count);
-        if (err != 0)
-        {
-            ncPrint("Failed to read.\n");
-            ncPrintHex(err);
-            break;
-        }
-
-        ncWrite(buf, read_count);
+        kfree(file);
+        return err;
     }
-    ncPrint("Done.\n");
+    bmfs_file_set_mode(file, BMFS_FILE_MODE_RW);
+
+
+    *fd = (FileDescriptor)
+    {
+        .data = (FileDescriptorData*)file,
+        .read = readFile,
+        .write = writeFile,
+        .close = closeFile
+    };
     return 0;
 }

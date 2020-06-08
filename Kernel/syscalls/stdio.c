@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "lib.h"
+#include "naiveConsole.h"
 #include "syslib.h"
 #include <console.h>
 
@@ -18,9 +19,10 @@ static int writeTTY(FileDescriptorData *data, const void *buf, size_t count)
     return viewWrite(data->tty, buf, count);
 }
 
-static void closeFD(FileDescriptorData *data)
+static int closeFD(FileDescriptorData *data)
 {
     kfree(data);
+    return 0;
 }
 
 void openStdio(FileDescriptor *table)

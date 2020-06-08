@@ -53,17 +53,19 @@ ata_lba_read:
     mov al, 0x20         ; Read with retry.
     out dx, al
 
+    mov rbx, rcx
 .still_going:  in al, dx
     test al, 8           ; the sector buffer requires servicing.
     jz .still_going      ; until the sector buffer is ready.
 
-    mov rax, 256         ; to read 256 words = 1 sector
-    xor bx, bx
-    mov bl, cl           ; read CL sectors
-    mul bx
-    mov rcx, rax         ; RCX is counter for INSW
-    mov rdx, 0x1F0       ; Data port, in and out
+.read_sectors:
+    mov cx, 256         ; to read 256 words = 1 sector
+    mov dx, 0x1F0       ; Data port, in and out
     rep insw             ; in to [RDI]
+    dec rbx
+    test rbx, rbx
+    mov dx, 0x1F7
+    jnz .still_going
 
     pop rdi
     pop rdx

@@ -1,38 +1,33 @@
+#include "naiveConsole.h"
+#include "pid.h"
 #include <stdint.h>
 #include <lib.h>
 #include <moduleLoader.h>
 #include <console.h>
-#include "naiveConsole.h"
+#include <loader.h>
+#include <syslib.h>
+#include <disk.h>
 
 extern int _syscall(int,void*,size_t);
+static void * sampleCodeModuleAddress = (void*)0x400000;
+typedef int (*EntryPoint)();
 
 int main()
 {	
-	/*
-	ncPrint("[Kernel Main]");
-	ncNewline();
-	ncPrint("  Sample code module at 0x");
-	ncPrintHex((uint64_t)sampleCodeModuleAddress);
-	ncNewline();
-	ncPrint("  Calling the sample code module returned: ");
-	ncPrintHex(((EntryPoint)sampleCodeModuleAddress)());
-	ncNewline();
-	ncNewline();
-
-	ncPrint("  Sample data module at 0x");
-	ncPrintHex((uint64_t)sampleDataModuleAddress);
-	ncNewline();
-	ncPrint("  Sample data module contents: ");
-	ncPrint((char*)sampleDataModuleAddress);
-	ncNewline();
-
-	ncPrint("[Finished]");
-	*/
+	int pages = 20;
 	createConsoleView(0,0,25,80);
+	kmap(&sampleCodeModuleAddress, NULL, NULL, pages);
+	//ata_lba_read(sampleCodeModuleAddress,0x110A,10);
 	diskInit();
-	show_file("test");
+	int fd = open("userland/0000-sampleCodeModule.bin", O_RDONLY);
+	int len = read(fd, sampleCodeModuleAddress, pages * PAGE_SIZE);
+	EntryPoint module = sampleCodeModuleAddress;
+	ProcessDescriptor *pd = currentProcess();
+	pd->binaryEnd = (uintptr_t)sampleCodeModuleAddress + len;
+	pd->prgmBreak = (uintptr_t)sampleCodeModuleAddress + pages * PAGE_SIZE;
 
-
+	module();
+	ncPrint("Listo\n");
 	_halt();
 
 	return 0;
