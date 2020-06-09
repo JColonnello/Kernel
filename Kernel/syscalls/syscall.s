@@ -3,10 +3,12 @@ GLOBAL _switchPML4
 GLOBAL _execve
 GLOBAL _switch
 GLOBAL _abandon
+GLOBAL _dropAndLeave
 extern funcTable
 extern funcTableSize
 extern getKernelStack
 extern execve
+extern dropTable
 
 %macro pushContext 0
 	push rsp
@@ -78,6 +80,20 @@ _switchPML4:
 	or rdi, 0x8
     mov cr3, rdi
     ret
+
+_dropAndLeave:
+	push rdi
+	push rsi
+	call getKernelStack
+	pop rsi
+	pop rdi
+	mov rsp, rax
+	push rdi
+	push rsi
+	call dropTable
+	pop rsi
+	pop rdi
+	jmp _abandon
 
 ; RDI = pml4
 ; RSI = new rsp

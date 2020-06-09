@@ -14,6 +14,8 @@ void *kmalloc(size_t size);
 void *kcalloc(size_t nmemb, size_t size);
 void kfree(void *ptr);
 uintptr_t createPML4();
+size_t getReservedPagesCount();
+size_t getReservedMemoryCount();
 void libInit();
 char *cpuVendor(char *result);
 void _halt();

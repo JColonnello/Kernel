@@ -9,10 +9,11 @@
 #define LOOPBACK 0x1FE
 
 //Bit field to map 4GB of RAM
-uint8_t physReservedPages[((uint64_t)4<<30) / PAGE_SIZE / 8];
+static uint8_t physReservedPages[((uint64_t)4<<30) / PAGE_SIZE / 8];
 static size_t firstFreePage;
-
-size_t currVirtualPage = 0;
+static size_t currVirtualPage = 0;
+static size_t reservedMemCount = 0;
+static size_t reservedPagesCount = 0;
 
 void * memset(void * destination, char c, size_t length)
 {
@@ -76,15 +77,22 @@ static uintptr_t reservePhysPage()
 	for(off = 0; chunk & 1; chunk >>= 1, off++, pos++) ;
 	physReservedPages[i] |= 1 << off;
 
-	return pos << 12;
+        reservedPagesCount++;
+        return pos << 12;
 }
 
 static void freePhysPage(size_t idx)
 {
 	if(idx / 8 >= sizeof(physReservedPages))
 		return;
+
+	if(physReservedPages[idx / 8] & (1 << (idx % 8)))
+		reservedPagesCount--;
 	physReservedPages[idx / 8] &= ~(1 << (idx % 8));
 }
+
+size_t getReservedPagesCount() { return reservedPagesCount; }
+size_t getReservedMemoryCount() { return reservedMemCount; }
 
 void libInit()
 {
@@ -133,47 +141,140 @@ static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 		.poff = 0,
 	};
 	size_t count = 0;
-	//ProcessDescriptor cp = currentProcess();
 	uintptr_t *pml4 = lb.table;
-	for(; va.pml4off < 512; va.pml4off++)
+	for(;;)
 	{
 		uintptr_t pml4e = pml4[va.pml4off];
+		VirtualAddr pdp = lb;
+		pdp.ptoff = va.pml4off;
 		if(!pml4e)
 		{
 			uintptr_t table = reservePhysPage();
 			pml4[va.pml4off] = table | 0b11;
+			memset(pdp.table, 0, PAGE_SIZE);
 		}
-		VirtualAddr pdp = lb;
-		pdp.ptoff = va.pml4off;
-		for(; va.pdpoff < 512; va.pdpoff++)
+		for(;;)
 		{
 			uintptr_t pdpe = pdp.table[va.pdpoff];
+			VirtualAddr pd = lb;
+			pd.pdoff = va.pml4off, pd.ptoff = va.pdpoff;
 			if(!pdpe)
 			{
 				uintptr_t table = reservePhysPage();
 				pdp.table[va.pdpoff] = table | 0b11;
+				memset(pd.table, 0, PAGE_SIZE);
 			}
-			VirtualAddr pd = lb;
-			pd.pdoff = va.pml4off, pd.ptoff = va.pdpoff;
-			for(; va.pdoff < 512; va.pdoff++)
+			for(;;)
 			{
 				uintptr_t pde = pd.table[va.pdoff];
+				VirtualAddr pt = lb;
+				pt.pdpoff = va.pml4off, pt.pdoff = va.pdpoff, pt.ptoff = va.pdoff;
 				if(!pde)
 				{
 					uintptr_t table = reservePhysPage();
 					pd.table[va.pdoff] = table | 0b11;
+					memset(pt.table, 0, PAGE_SIZE);
 				}
-				VirtualAddr pt = lb;
-				pt.pdpoff = va.pml4off, pt.pdoff = va.pdpoff, pt.ptoff = va.pdoff;
-				for(; va.ptoff < 512; va.ptoff++)
+				for(;;)
 				{
 					pt.table[va.ptoff] = physMap[count++] | 0x7;
 					if(count >= pageCount)
 						return;
+
+					va.ptoff++;
+					if(va.ptoff == 0)
+						break;
 				}
+				va.pdoff++;
+				if(va.pdoff == 0)
+					break;
 			}
+			va.pdpoff++;
+			if(va.pdpoff == 0)
+				break;
 		}
+		va.pml4off++;
+		if(va.pml4off == 0)
+			break;
 	}
+}
+
+static void checkAndFree(uintptr_t entry)
+{
+	if(entry & 0x1 && entry > (firstFreePage << 12))
+		freePhysPage(entry>>12);
+}
+
+void dropTable()
+{
+	VirtualAddr va = { .addr = 0 };
+	//Setup loopback address
+	const VirtualAddr lb = 
+	{ 
+		.sign = -1,
+		.pml4off = LOOPBACK,
+		.pdpoff = LOOPBACK,
+		.pdoff = LOOPBACK,
+		.ptoff = LOOPBACK,
+		.poff = 0,
+	};
+	VirtualAddr limit = { .ptr = &__startOfUniverse };
+	
+	uintptr_t *pml4 = lb.table;
+	while(va.addr < limit.addr)
+	{
+		uintptr_t pml4e = pml4[va.pml4off];
+		if(va.pml4off == LOOPBACK || !(pml4e & 0x1))
+			goto incpml4;
+		
+		VirtualAddr pdp = lb;
+		pdp.ptoff = va.pml4off;
+		while(va.addr < limit.addr)
+		{
+			uintptr_t pdpe = pdp.table[va.pdpoff];
+			if(!(pdpe & 0x1))
+				goto incpdp;
+			
+			VirtualAddr pd = lb;
+			pd.pdoff = va.pml4off, pd.ptoff = va.pdpoff;
+			while(true)
+			{
+				uintptr_t pde = pd.table[va.pdoff];
+				if(!(pde & 0x1))
+					goto incpd;
+				
+				VirtualAddr pt = lb;
+				pt.pdpoff = va.pml4off, pt.pdoff = va.pdpoff, pt.ptoff = va.pdoff;
+				while(true)
+				{
+					uintptr_t pte = pt.table[va.ptoff];
+					checkAndFree(pte);
+					va.ptoff++;
+					if(va.ptoff == 0)
+						break;
+				}
+				checkAndFree(pde);
+				incpd:
+				va.pdoff++;
+				if(va.pdoff == 0)
+					break;
+			}
+			checkAndFree(pdpe);
+			incpdp:
+			va.pdpoff++;
+			if(va.addr >> 47)
+				va.sign = -1;
+			if(va.pdpoff == 0)
+				break;
+		}
+		checkAndFree(pml4e);
+		incpml4:
+		va.pml4off++;
+		if(va.pml4off == 0)
+			break;
+	}
+	uintptr_t pml4Loop = pml4[LOOPBACK];
+	checkAndFree(pml4Loop);
 }
 
 void kunmap(void *virtual, size_t pageCount)
@@ -237,6 +338,7 @@ uintptr_t createPML4()
 		.ptoff = tmp.pdoff,
 	};
 	kmap(&tmp.ptr, NULL, NULL, 2);
+	memset(tmp.ptr, 0, PAGE_SIZE * 2);
 	//Temporal map to populate
 	uintptr_t pml4 = umap.table[0x1FE] & PAGE_MASK;
 	uintptr_t pdp = umap.table[0x1FF] & PAGE_MASK;
@@ -284,6 +386,7 @@ void *kmalloc(size_t size)
 				node->next = newNode;
 				node->size = newNodeStart;
 			}
+			reservedMemCount += node->size;
 			return node->block;
 		}
 		//Next node is unused and contiguous
@@ -310,6 +413,7 @@ void *kmalloc(size_t size)
 	node->used = true;
 	node->next = postNode;
 	*lastNode = node;
+	reservedMemCount += node->size;
 	return node->block;
 }
 
@@ -323,6 +427,7 @@ void kfree(void *ptr)
 		if(node->block == ptr)
 		{
 			node->used = false;
+			reservedMemCount -= node->size;
 			return;
 		}
 		lastNode = &node->next;

@@ -51,7 +51,7 @@ extern void _switch(uintptr_t pml4, uintptr_t newStack, uintptr_t *stackSave);
 
 void contextSwitch(int pid)
 {
-    if(pid >= MAX_PID && pid > 0)
+    if(pid >= MAX_PID || pid < 0)
         return;
     
     ProcessDescriptor *curr = currentProcess(), *next = &descriptors[pid];
@@ -63,13 +63,13 @@ void contextSwitch(int pid)
     _switch(next->pml4, next->stack, &curr->stack);
 }
 
-extern void _abandon(uintptr_t pml4, uintptr_t newStack);
+extern void _dropAndLeave(uintptr_t pml4, uintptr_t newStack);
 
 void exitProcess()
 {
     ProcessDescriptor *pd = currentProcess(), *parent = pd->parent;
     //Drop PML4
-    //kfree(pd->fd);
+    kfree(pd->fd);
     inUse[pd->pid] = false;
     if(parent == NULL)
     {
@@ -80,6 +80,6 @@ void exitProcess()
     {
         byViews[parent->tty] = parent->pid;
         currentPID = parent->pid;
-        _abandon(parent->pml4, parent->stack);
+        _dropAndLeave(parent->pml4, parent->stack);
     }
 }
