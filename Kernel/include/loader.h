@@ -1,10 +1,10 @@
 #pragma once
 
-extern void __text;
-extern void __rodata;
-extern void __data;
-extern void __bss;
-extern void __startOfUniverse;
-extern void __endOfKernelBinary;
-extern void __endOfKernel;
-extern void __vga;
+extern char __text;
+extern char __rodata;
+extern char __data;
+extern char __bss;
+extern char __startOfUniverse;
+extern char __endOfKernelBinary;
+extern char __endOfKernel;
+extern char __vga;

@@ -11,12 +11,11 @@ void _init()
 	ncClear();
 	load_idt();
 	libInit();
-	ProcessDescriptor desc = (ProcessDescriptor)
-	{
-		.pml4 = 0x2000,
-		.tty = 0
-	};
-	createProcess(&desc);
+	ProcessDescriptor *pd = currentProcess();
+	pd->pml4 = 0x2000;
+	pd->tty = 0;
+	pd->fdtSize = initFD(&pd->fd, pd->tty);
+
 	main();
 	return;
 }

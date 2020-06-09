@@ -17,18 +17,12 @@ int main()
 	int pages = 20;
 	createConsoleView(0,0,25,80);
 	kmap(&sampleCodeModuleAddress, NULL, NULL, pages);
-	//ata_lba_read(sampleCodeModuleAddress,0x110A,10);
 	diskInit();
-	int fd = open("userland/0000-sampleCodeModule.bin", O_RDONLY);
-	int len = read(fd, sampleCodeModuleAddress, pages * PAGE_SIZE);
-	EntryPoint module = sampleCodeModuleAddress;
-	ProcessDescriptor *pd = currentProcess();
-	pd->binaryEnd = (uintptr_t)sampleCodeModuleAddress + len;
-	pd->prgmBreak = (uintptr_t)sampleCodeModuleAddress + pages * PAGE_SIZE;
-
-	module();
+	
+	int pid = execve("userland/0000-sampleCodeModule.bin", NULL, NULL);
+	contextSwitch(pid);
 	ncPrint("Listo\n");
-	_halt();
 
+	_halt();
 	return 0;
 }

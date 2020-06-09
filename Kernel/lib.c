@@ -6,15 +6,13 @@
 #include <loader.h>
 #include <pid.h>
 
-extern const void *PML4_ADDR;
-extern const void *PDP_ADDR;
-extern const void *PD_ADDR;
-extern const void *PT_ADDR;
+#define LOOPBACK 0x1FE
+
 //Bit field to map 4GB of RAM
 uint8_t physReservedPages[((uint64_t)4<<30) / PAGE_SIZE / 8];
 static size_t firstFreePage;
 
-size_t currVirtualPage[MAX_PID];
+size_t currVirtualPage = 0;
 
 void * memset(void * destination, char c, size_t length)
 {
@@ -96,7 +94,7 @@ void libInit()
 	for(int i = 0; i < firstFreePage % 8; i++)
 		last = last << 1 | 1;
 	physReservedPages[firstFreePage / 8] = last;
-	currVirtualPage[0] = firstFreePage + ((uintptr_t)&__startOfUniverse >> 12);
+	currVirtualPage = firstFreePage + ((uintptr_t)&__startOfUniverse >> 12);
 }
 
 #define PMASK 0xFFFFFFFFFF000
@@ -107,6 +105,7 @@ typedef union
 {
 	uintptr_t addr;
 	uintptr_t *table;
+	void *ptr;
 	struct
 	{
 		unsigned poff : 12;
@@ -127,15 +126,15 @@ static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 	const VirtualAddr lb = 
 	{ 
 		.sign = -1,
-		.pml4off = 0x1FE,
-		.pdpoff = 0x1FE,
-		.pdoff = 0x1FE,
-		.ptoff = 0x1FE,
+		.pml4off = LOOPBACK,
+		.pdpoff = LOOPBACK,
+		.pdoff = LOOPBACK,
+		.ptoff = LOOPBACK,
 		.poff = 0,
 	};
 	size_t count = 0;
 	//ProcessDescriptor cp = currentProcess();
-	uintptr_t *pml4 = (uintptr_t*)lb.addr;
+	uintptr_t *pml4 = lb.table;
 	for(; va.pml4off < 512; va.pml4off++)
 	{
 		uintptr_t pml4e = pml4[va.pml4off];
@@ -181,10 +180,10 @@ void kunmap(void *virtual, size_t pageCount)
 {
 	for(int i = 0; i < pageCount; i++)
 	{
-		VirtualAddr addr = { .addr = (uintptr_t)virtual };
+		VirtualAddr addr = { .ptr = virtual };
 		VirtualAddr pt = {
 			.sign = -1,
-			.pml4off = 0x1FE,
+			.pml4off = LOOPBACK,
 			.pdpoff = addr.pml4off,
 			.pdoff = addr.pdpoff,
 			.ptoff = addr.pdoff,
@@ -212,9 +211,8 @@ void *kmap(void **virtual, const void *hint, void **physical, size_t pageCount)
 	uintptr_t dest;
 	if(virtual == NULL)
 	{
-		ProcessDescriptor *cp = currentProcess();
-		dest = currVirtualPage[cp->pid] << 12;
-		currVirtualPage[cp->pid] += pageCount;
+		dest = currVirtualPage << 12;
+		currVirtualPage += pageCount;
 	}
 	else
 		dest = (uintptr_t)*virtual;
@@ -222,6 +220,37 @@ void *kmap(void **virtual, const void *hint, void **physical, size_t pageCount)
 	map(dest, phyPages, pageCount);
 
 	return (void*)dest;
+}
+
+#define PD_ADDR 0x10000
+
+uintptr_t createPML4()
+{
+	//For PML4 and last PDP
+	VirtualAddr tmp = { .addr = 0xFFFFFFFFFFFFE000 };
+	VirtualAddr umap = 
+	{
+		.sign = -1,
+		.pml4off = LOOPBACK,
+		.pdpoff = tmp.pml4off,
+		.pdoff = tmp.pdpoff,
+		.ptoff = tmp.pdoff,
+	};
+	kmap(&tmp.ptr, NULL, NULL, 2);
+	//Temporal map to populate
+	uintptr_t pml4 = umap.table[0x1FE] & PAGE_MASK;
+	uintptr_t pdp = umap.table[0x1FF] & PAGE_MASK;
+	//Set loopback
+	tmp.table[LOOPBACK] = pml4 | 0x3;
+	//Reference PDP
+	tmp.table[0x1FF] = pdp | 0x3;
+	tmp.addr += 0x1000;
+	//Reference PD of kernel
+	tmp.table[0x1FF] = PD_ADDR | 0x3;
+	//Reference kernel last table
+	umap.table[0x1FE] = 0;
+	umap.table[0x1FF] = 0;
+	return pml4;
 }
 
 typedef struct MallocNode MallocNode;
@@ -234,7 +263,6 @@ struct MallocNode
 };
 
 MallocNode *firstNode = NULL;
-
 void *kmalloc(size_t size)
 {
 	MallocNode **lastNode = &firstNode;
@@ -245,14 +273,16 @@ void *kmalloc(size_t size)
 		if(!node->used && node->size >= size)
 		{
 			node->used = true;
-			size_t dif = node->size - size;
-			if(dif > sizeof(MallocNode))
+			uintptr_t newNodeStart = size;
+			int remain = node->size - newNodeStart;
+			if(remain > sizeof(MallocNode))
 			{
-				MallocNode *newNode = (MallocNode*)&node->block[size];
-				newNode->size = dif - sizeof(MallocNode);
+				MallocNode *newNode = (MallocNode*)&node->block[newNodeStart];
+				newNode->size = remain - sizeof(MallocNode);
 				newNode->used = false;
 				newNode->next = node->next;
 				node->next = newNode;
+				node->size = newNodeStart;
 			}
 			return node->block;
 		}

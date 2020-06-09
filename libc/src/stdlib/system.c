@@ -11,10 +11,12 @@
 
 extern int fork( void );
 extern int execve( const char * filename, char * const argv[], char * const envp[] );
-extern int wait( int * status );
+extern int wait( int pid );
 
+/*
 int system( const char * string )
 {
+    return -1;
     const char * argv[] = { "sh", "-c", NULL, NULL };
     argv[2] = string;
 
@@ -30,14 +32,13 @@ int system( const char * string )
         {
             while ( wait( NULL ) != pid )
             {
-                /* EMPTY */
+                // EMPTY 
             }
         }
     }
 
-    return -1;
 }
-
+*/
 #ifdef TEST
 
 #include "_PDCLIB_test.h"

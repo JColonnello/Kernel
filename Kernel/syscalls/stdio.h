@@ -1,4 +1,4 @@
 #pragma once
 #include <syslib.h>
 
-void openStdio(FileDescriptor *table);
+void openStdio(FileDescriptor *table, int tty);

@@ -2,10 +2,11 @@
 #include <stdlib.h>
 
 int main() {
-	printf("Begin\n");
-	char *buf = malloc(18000);
-	sprintf(buf, "Hola\n");
-	printf("%s", buf);
-	free(buf);
+	printf("Begin %d\n", getpid());
+	int pid = execve("userland/0000-sampleCodeModule.bin", NULL, NULL);
+	for(int i = 0; i < 20000000; i++) ;
+	wait(pid);
+	for(int i = 0; i < 20000000; i++) ;
+	printf("Exit %d\n", getpid());
 	return 0;
 }

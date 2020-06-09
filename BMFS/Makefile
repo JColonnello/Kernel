@@ -8,7 +8,7 @@ $(LIB): $(OBJS)
 
 build/%.o: %.c
 	mkdir -p $(dir $@)
-	$(CC) -fno-stack-protector -c -o $@ -I$(INC_DIR) $^
+	$(CC) -fno-stack-protector -g -c -o $@ -I$(INC_DIR) $^
 
 clean:
 	rm -r build $(LIB)

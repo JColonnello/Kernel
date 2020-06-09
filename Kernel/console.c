@@ -59,8 +59,8 @@ typedef struct
     size_t maxInput;
 } ConsoleView;
 
-static CharEntry (*video)[25][80] = &__vga + 0x18000;
-static ConsoleView views[8];
+static CharEntry (*video)[25][80] = (void*)&__vga + 0x18000;
+static ConsoleView views[MAX_VIEWS];
 static const char defaultColor = 0x07;
 int focusedView = 0;
 
@@ -87,14 +87,14 @@ int createConsoleView(int startY, int startX, int height, int width)
         .width = width,
         .lineCount = 1
     };
-    view.lines = kmap(NULL, NULL, NULL, bufferPages);
-    view.maxLines = (bufferPages * 4096) / (view.width * sizeof(CharEntry));
+    view.lines = kmalloc(bufferPages * PAGE_SIZE);
+    view.maxLines = (bufferPages * PAGE_SIZE) / (view.width * sizeof(CharEntry));
     for(int i = 0; i < (view.width * view.maxLines); i++)
     {
         view.lines[i] = (CharEntry){ .color.code = defaultColor, .symbol = 0 };
     }
-    view.input = kmap(NULL, NULL, NULL, 1);
-    view.maxInput = 4096;
+    view.input = kmalloc(PAGE_SIZE);
+    view.maxInput = PAGE_SIZE;
 
     views[id] = view;
 
@@ -107,15 +107,19 @@ void viewflush(int id)
     CharEntry (*buf)[view.maxLines][view.width] = (void*)view.lines;
 
     int lines = (view.height < view.lineCount) ? view.height : view.lineCount;
+    int outY = view.startY, bufY = view.lineEnd - lines + 1;
     for(int i = 0; i < lines; i++)
     {
-        int bufLine = (view.lineEnd - lines + i + 1) % view.maxLines;
-        for(int j = 0; j < view.width; j++)
-        {
-            (*video)[view.startY + i][view.startX + j] = (*buf)[bufLine][j];
-        }
-    }
+        if(outY >= 25) outY -= 25;
+        if(outY < 0) outY += 25;
+        if(bufY >= 25) bufY -= 25;
+        if(bufY < 0) bufY += 25;
 
+        for(int j = 0; j < view.width; j++)
+            (*video)[outY][view.startX+j] = (*buf)[bufY][j];
+        outY++;
+        bufY++;
+    }
 }
 
 void viewLF(int id)
@@ -126,13 +130,13 @@ void viewLF(int id)
     view->lineEnd++;
     view->lineCursor = 0;
     view->lineCount++;
+    if(view->lineCount >= view->maxLines)
+            view->lineCount = view->maxLines;
+    if(view->lineEnd >= view->maxLines)
+        view->lineEnd %= view->maxLines;
+    
     for(int j = 0; j < view->width; j++)
         (*buf)[view->lineEnd][j] = (CharEntry){ .color.code = defaultColor, .symbol = 0 };
-
-    if(view->lineCount > view->maxLines)
-            view->lineCount = view->maxLines;
-    if(view->lineEnd > view->maxLines)
-        view->lineEnd %= view->maxLines;
 }
 
 int viewWrite(int id, const char *text, size_t n)
@@ -218,10 +222,10 @@ void ncWrite(const char *buf, size_t n)
 
 void ncPrint(const char * string)
 {
-	int i;
-
-	for (i = 0; string[i] != 0; i++)
-		ncPrintChar(string[i]);
+	int i = 0;
+    while(string[i] != 0)
+        i++;
+    ncWrite(string, i);
 }
 
 void ncPrintChar(char character)

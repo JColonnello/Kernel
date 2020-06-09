@@ -5,8 +5,8 @@ OBJS := $(SOURCES:%.c=%.c.o)
 all: $(MODULE)
 
 $(MODULE): $(OBJS) $(LIB_DIRS)/libc.a $(LIB_DIRS)/crt0.o
-	$(LD) $(LDFLAGS) -T sampleCodeModule.ld -o $(MODULE).elf $(OBJS) -l:libc.a
-	objcopy -O binary $(MODULE).elf $(MODULE)
+	$(LD) $(LDFLAGS) -T sampleCodeModule.ld -o $@.elf $(OBJS) -l:libc.a
+	objcopy -O binary $@.elf $@
 
 %.c.o: %.c
 	$(GCC) $(GCCFLAGS) -g -c $^ -o $@

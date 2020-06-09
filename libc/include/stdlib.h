@@ -164,7 +164,9 @@ _PDCLIB_PUBLIC int atexit( void ( *func )( void ) );
    exit() does not return.
 */
 _PDCLIB_PUBLIC _PDCLIB_Noreturn void exit( int status );
-
+_PDCLIB_PUBLIC int execve( const char * filename, char * const argv[], char * const envp[] );
+_PDCLIB_PUBLIC int getpid();
+_PDCLIB_PUBLIC int wait( int pid );
 /* Normal process termination. Functions registered by at_quick_exit() (see
    above) are called, streams flushed, files closed and temporary files removed
    before the program is terminated with the given status. (See comment for

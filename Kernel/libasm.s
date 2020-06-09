@@ -2,6 +2,7 @@ GLOBAL cpuVendor
 
 GLOBAL _halt
 global _hlt
+global _wait
 global _syscall
 
 section .text
@@ -28,6 +29,11 @@ cpuVendor:
 
 	mov rsp, rbp
 	pop rbp
+	ret
+
+_wait:
+	hlt
+	hlt
 	ret
 
 _hlt:

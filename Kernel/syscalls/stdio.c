@@ -1,6 +1,5 @@
 #include "stdio.h"
 #include "lib.h"
-#include "naiveConsole.h"
 #include "syslib.h"
 #include <console.h>
 
@@ -25,7 +24,7 @@ static int closeFD(FileDescriptorData *data)
     return 0;
 }
 
-void openStdio(FileDescriptor *table)
+void openStdio(FileDescriptor *table, int tty)
 {
     //To not overcomplicate things, is better if we allocate
     //a diferent structure for every descriptor
@@ -51,4 +50,8 @@ void openStdio(FileDescriptor *table)
         .write = writeTTY,
         .close = closeFD
     };
+
+    table[0].data->tty = tty;
+    table[1].data->tty = tty;
+    table[2].data->tty = tty;
 }

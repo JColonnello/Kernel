@@ -48,15 +48,15 @@ loader:
 	mov rsp, rax
 	
 	mov rdi, PD_ADDR				; Create first PD entry
-	mov rax, PT_ADDR | 0x7
+	mov rax, PT_ADDR | 0x3
 	stosq
 
 	mov rdi, PDP_ADDR + 511 * 8		; Create PDP entry 512
-	mov rax, PD_ADDR | 0x7
+	mov rax, PD_ADDR | 0x3
 	stosq
 
 	mov rdi, PML4_ADDR + 511 * 8	; Create PML4 entry 512
-	mov rax, PDP_ADDR | 0x7
+	mov rax, PDP_ADDR | 0x3
 	stosq
 
 	mov rax, PML4_ADDR | 0x8

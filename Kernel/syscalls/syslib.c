@@ -8,32 +8,33 @@
 #include "stdio.h"
 #include <disk.h>
 
-#define MAX_FD 64
+#define MAX_FD 128
 typedef int (Syscall)(void);
 
 int read(int fd, void *buf, size_t count)
 {
     ProcessDescriptor *pd = currentProcess();
-    FileDescriptor desc;
 
-    if(fd < pd->fdtSize && (desc = pd->fd[fd]).read != NULL)
+    if(fd < pd->fdtSize)
     {
-        return desc.read(desc.data, buf, count);
+        FileDescriptor desc= pd->fd[fd];
+        if(desc.isOpen && desc.read != NULL)
+            return desc.read(desc.data, buf, count);
     }
-    else
-        return -1;
+    return -1;
 }
 
 int write(int fd, const void *buf, size_t count)
 {
     ProcessDescriptor *pd = currentProcess();
-    FileDescriptor desc;
-    if(fd < pd->fdtSize && (desc = pd->fd[fd]).write != NULL)
+
+    if(fd < pd->fdtSize)
     {
-        return desc.write(desc.data, buf, count);
+        FileDescriptor desc= pd->fd[fd];
+        if(desc.isOpen && desc.write != NULL)
+            return desc.write(desc.data, buf, count);
     }
-    else
-        return -1;
+    return -1;
 }
 
 int open(const char *path, int mode)
@@ -42,26 +43,34 @@ int open(const char *path, int mode)
     FileDescriptor desc;
 
     int i;
-    for(i = 0; i < pd->fdtSize && pd->fd[i].data != NULL; i++) ;
+    for(i = 0; i < pd->fdtSize && pd->fd[i].isOpen; i++) ;
     if(i == pd->fdtSize)
         return -1;
+
     int err = openFile(&desc, path, mode);
     if(err != 0)
         return err;
+
     pd->fd[i] = desc;
+    pd->fd[i].isOpen = true;
     return i;
 }
 
 int close(int fd)
 {
     ProcessDescriptor *pd = currentProcess();
-    FileDescriptor desc;
-    if(fd < pd->fdtSize && (desc = pd->fd[fd]).close != NULL)
+
+    if(fd < pd->fdtSize)
     {
-        return desc.close(desc.data);
+        FileDescriptor desc= pd->fd[fd];
+        if(desc.isOpen && desc.close != NULL)
+        {
+            int err = desc.close(desc.data);
+            pd->fd[fd].isOpen = false;
+            return err;
+        }
     }
-    else
-        return -1;
+    return -1;
 }
 
 static uintptr_t brk(uintptr_t addr)
@@ -96,11 +105,86 @@ static uintptr_t brk(uintptr_t addr)
     }
 }
 
-size_t initFD(FileDescriptor **fdt)
+extern void _execve();
+extern void _switchPML4(uintptr_t pml4);
+
+int execve(const char *pathname, char *const argv[], char *const envp[])
+{
+    ProcessDescriptor *pdnew, *curr = currentProcess();
+
+    size_t pathlen = 0;
+    while(pathname[pathlen] != 0)
+        pathlen++;
+    if(pathlen > 255)
+        return -1;
+    
+    
+    int pid = createProcess(&pdnew);
+    if(pid < 0)
+        return -1;
+    
+    int fd = open(pathname, O_RDONLY);
+    if(fd < 0)
+        return -1;
+    _switchPML4(pdnew->pml4);
+    
+    size_t size = 0;
+    void *exePos = (void*)0x400000;
+    int rd;
+    void *pgrmBreak = (void*)exePos;
+    do 
+    {
+        int pageStep = 4;
+        size_t step = pageStep * PAGE_SIZE;
+        void *buf = (exePos + size);
+        while(buf + step > pgrmBreak)
+        {
+            kmap(&pgrmBreak, NULL, NULL, pageStep);
+            pgrmBreak += pageStep * PAGE_SIZE;
+        }
+        rd = read(fd, buf, step);
+        size += rd;
+    } while (rd > 0);
+    close(fd);
+    pdnew->binaryEnd = (uintptr_t)exePos + size;
+    pdnew->prgmBreak = (uintptr_t)pgrmBreak;
+
+    size_t stackPages = 32;
+    uintptr_t stackEnd = (uintptr_t)exePos;
+    void *stackStart = (void*)(stackEnd - stackPages * PAGE_SIZE);
+    kmap(&stackStart, NULL, NULL, stackPages);
+
+    //Prepare context, store return address
+    stackEnd -= sizeof(void*);
+    *(void**)(stackEnd) = exePos;
+    pdnew->stack = stackEnd;
+    _switchPML4(curr->pml4);
+    return pid;
+}
+
+static int exit(int status)
+{
+    exitProcess();
+}
+
+static void wait(int pid)
+{
+    contextSwitch(pid);
+}
+
+static int getpid()
+{
+    return currentProcess()->pid;
+}
+
+size_t initFD(FileDescriptor **fdt, int tty)
 {
     size_t size = MAX_FD;
     *fdt = kcalloc(size, sizeof(FileDescriptor));
-    openStdio(*fdt);
+    openStdio(*fdt, tty);
+    (*fdt)[0].isOpen = true;
+    (*fdt)[1].isOpen = true;
+    (*fdt)[2].isOpen = true;
 
     return size;
 }
@@ -111,7 +195,11 @@ Syscall *funcTable[] =
     [1] = (Syscall*)write,
     [2] = (Syscall*)open,
     [3] = (Syscall*)close,
-    [12] = (Syscall*)brk
+    [12] = (Syscall*)brk,
+    [39] = (Syscall*)getpid,
+    [59] = (Syscall*)_execve,
+    [60] = (Syscall*)exit,
+    [64] = (Syscall*)wait,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

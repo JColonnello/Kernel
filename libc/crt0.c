@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdlib.h>
+
 extern char bss;
 extern char endOfBinary;
 
@@ -10,5 +12,5 @@ void _start() {
 	brk(&endOfBinary);
 	memset(&bss, 0, &endOfBinary - &bss);
 	int err = main();
-	//exit(err);
+	exit(err);
 }

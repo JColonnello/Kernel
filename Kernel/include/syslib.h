@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct FileDescriptorData FileDescriptorData;
 
@@ -9,6 +10,7 @@ typedef struct FileDescriptorData FileDescriptorData;
 
 typedef struct
 {
+    bool isOpen;
     FileDescriptorData *data;
     int (*read)(FileDescriptorData *data, void *buf, size_t count);
     int (*write)(FileDescriptorData *data, const void *buf, size_t count);
@@ -16,7 +18,8 @@ typedef struct
 } FileDescriptor;
 
 int syscallHandler();
-size_t initFD(FileDescriptor **fdt);
+size_t initFD(FileDescriptor **fdt, int tty);
 int read(int fd, void *buf, size_t count);
 int write(int fd, const void *buf, size_t count);
 int open(const char *path, int mode);
+int execve(const char *pathname, char *const argv[], char *const envp[]);
