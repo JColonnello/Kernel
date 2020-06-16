@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 extern void *_brk(void *addr);
 
@@ -49,4 +50,14 @@ void *sbrk(intptr_t increment)
         return (void*) -1;
 
     return prevbrk;
+}
+
+char *realpath(char *path, char *resolved)
+{
+    if(resolved == NULL)
+    {
+        resolved = malloc(strlen(path)+1);
+    }
+    strcpy(resolved, path);
+    return resolved;
 }

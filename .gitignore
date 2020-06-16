@@ -12,5 +12,6 @@
 #Object files
 *.o
 
+build/
 Image/.image
 compile_commands.json

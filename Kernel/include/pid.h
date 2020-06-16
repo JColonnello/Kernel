@@ -25,4 +25,5 @@ int createProcess(ProcessDescriptor **out);
 int getByView(int view);
 uintptr_t getKernelStack();
 void contextSwitch(int pid);
+bool isRunning(int pid);
 void exitProcess();

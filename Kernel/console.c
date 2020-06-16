@@ -4,6 +4,7 @@
 #include <loader.h>
 #include <lib.h>
 #include <naiveConsole.h>
+#include <stdbool.h>
 
 typedef enum
 {
@@ -96,6 +97,37 @@ int createConsoleView(int startY, int startX, int height, int width)
     view.input = kmalloc(PAGE_SIZE);
     view.maxInput = PAGE_SIZE;
 
+    for(int i = startY; i < startY + height; i++)
+        if(i >= 0 && i < 25)
+        {
+            if(startX-1 >= 0)
+                (*video)[i][startX-1].symbol = (char)186;
+            if(startX+width < 80)
+                (*video)[i][startX+width].symbol = (char)186;
+        }
+    for(int j = startX; j < startX + width; j++)
+        if(j >= 0 && j < 80)
+        {
+            if(startY-1 >= 0)
+                (*video)[startY-1][j].symbol = (char)205;
+            if(startY+height < 25)
+                (*video)[startY+height][j].symbol = (char)205;
+        }
+    if(startX-1 >= 0)
+    {
+        if(startY-1 >= 0)
+            (*video)[startY-1][startX-1].symbol = (char)201;
+        if(startY+height < 80)
+            (*video)[startY+height][startX-1].symbol = (char)200;
+    }
+    if(startX+width < 80)
+    {
+        if(startY-1 >= 0)
+            (*video)[startY-1][startX+width].symbol = (char)187;
+        if(startY+height+1 < 80)
+            (*video)[startY+height][startX+width].symbol = (char)188;
+    }
+    
     views[id] = view;
 
     return id;
@@ -191,7 +223,8 @@ int inputBufferRead(int id, char *dest, size_t count)
     if(view->input == NULL)
         return 0;
 
-    for(i = 0; i < count; i++, view->inputCount--)
+    bool done = false;
+    for(i = 0; i < count && !done; i++, view->inputCount--)
     {
         while(view->inputCount == 0)
             _hlt();
@@ -199,8 +232,11 @@ int inputBufferRead(int id, char *dest, size_t count)
         dest[i] = view->input[view->inputStart++];
         if(view->inputStart == view->maxInput)
             view->inputStart = 0;
-    }
 
+        if(dest[i] == '\n')
+            done = true;
+    }
+    
     return i;
 }
 

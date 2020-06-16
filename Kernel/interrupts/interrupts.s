@@ -15,6 +15,7 @@ EXTERN ncPrintChar
 EXTERN ncPrint
 EXTERN ncPrintPointer
 EXTERN ncNewline
+EXTERN exit
 
 
 SECTION .text
@@ -218,12 +219,14 @@ defaultException:
 	mov rdi, adr_string
 	call ncPrint
 	; Skip return address, exception number, 16 pushed regs
-	mov rdi, [rsp+0x8*19]	; RIP
+	mov rdi, [rsp+0x8*18]	; RIP
 	call ncPrintPointer
 	call ncNewline
 	lea rdi, [rsp+8]		; RAX
 	call os_dump_regs
-	jmp _hltForever
+	mov rdi, [rsp + 8*17]
+	call exit
+	ret
 
 _hltForever:
 	cli

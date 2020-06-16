@@ -117,8 +117,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
         pathlen++;
     if(pathlen > 255)
         return -1;
-    
-    
+
     int pid = createProcess(&pdnew);
     if(pid < 0)
         return -1;
@@ -126,6 +125,39 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     int fd = open(pathname, O_RDONLY);
     if(fd < 0)
         return -1;
+        
+    size_t argLen = 2;
+    char defkargs[2] = {0};
+    char *kargs = defkargs;
+    if(argv != NULL)
+    {
+        argLen = 1;
+        char *const * tmpargv = argv;
+        while(*tmpargv != NULL)
+        {
+            char *str = *tmpargv;
+            do
+                argLen++;
+            while(*str++ != 0);
+            tmpargv++;
+        }
+        //double 0 at the end
+        argLen++;
+        kargs = kmalloc(argLen);
+        char *ptr = kargs+1;
+        tmpargv = argv;
+        while(*tmpargv != NULL)
+        {
+            char *str = *tmpargv;
+            do
+                *ptr++ = *str;
+            while(*str++ != 0);
+            tmpargv++;
+        }
+        kargs[0] = 0;
+        kargs[argLen-1] = 0;
+    }
+    
     _switchPML4(pdnew->pml4);
     
     size_t size = 0;
@@ -158,12 +190,23 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     stackEnd -= sizeof(void*);
     *(void**)(stackEnd) = exePos;
     pdnew->stack = stackEnd;
+
+    char *argLoc = (void*)0x100000;
+    kmap((void**)&argLoc, NULL, NULL, argLen / 0x1000 + 1);
+    memcpy(argLoc, kargs, argLen);
+    if(argv != NULL)
+        kfree(kargs);
+    
     _switchPML4(curr->pml4);
     return pid;
 }
 
-static int exit(int status)
+int exit(int status)
 {
+    ProcessDescriptor *pd = currentProcess();
+    for(int i = 0; i < MAX_FD; i++)
+        if(pd->fd[i].isOpen)
+            close(i);
     exitProcess();
 }
 
@@ -176,6 +219,19 @@ static int getpid()
 {
     return currentProcess()->pid;
 }
+
+struct tm
+{
+    int tm_sec;   /* 0-60 */
+    int tm_min;   /* 0-59 */
+    int tm_hour;  /* 0-23 */
+    int tm_mday;  /* 1-31 */
+    int tm_mon;   /* 0-11 */
+    int tm_year;  /* years since 1900 */
+    int tm_wday;  /* 0-6 */
+    int tm_yday;  /* 0-365 */
+    int tm_isdst; /* >0 DST, 0 no DST, <0 information unavailable */
+};
 
 size_t initFD(FileDescriptor **fdt, int tty)
 {

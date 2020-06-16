@@ -37,6 +37,13 @@ int createProcess(ProcessDescriptor **out)
     return pd->pid;
 }
 
+bool isRunning(int pid)
+{
+    if(pid >= MAX_PID || pid < 0)
+        return false;
+    return inUse[pid];
+}
+
 int getByView(int view)
 {
     return (view < MAX_VIEWS) ? byViews[view] : -1;
@@ -55,11 +62,11 @@ void contextSwitch(int pid)
         return;
     
     ProcessDescriptor *curr = currentProcess(), *next = &descriptors[pid];
-    if(next->parent != curr)
-        return;
 
-    byViews[next->tty] = next->pid;
+    if(next->pid != 0)
+        byViews[next->tty] = next->pid;
     currentPID = next->pid;
+    changeFocus(next->tty);
     _switch(next->pml4, next->stack, &curr->stack);
 }
 
@@ -78,7 +85,7 @@ void exitProcess()
     }
     else
     {
-        byViews[parent->tty] = parent->pid;
+        byViews[pd->tty] = parent->pid;
         currentPID = parent->pid;
         _dropAndLeave(parent->pml4, parent->stack);
     }

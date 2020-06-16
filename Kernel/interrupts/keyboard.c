@@ -2,6 +2,8 @@
 #include "keyboard.h"
 #include <types.h>
 #include "keyboard.h"
+#include "naiveConsole.h"
+#include "pid.h"
 
 extern u8 _getKeyCode();
 
@@ -284,6 +286,8 @@ static char charMap[256][8] = {
 static u8 modStatus = 0;
 static bool capsLock = false;
 
+extern void cleanInt();
+
 void keyboardHandler()
 {
     u8 code = _getKeyCode();
@@ -316,7 +320,10 @@ void keyboardHandler()
                 inputBufferWrite(c);
             else if(code >= scanCodes[KEY_F1] && code <= scanCodes[KEY_F10])
             {
-                changeFocus(code - scanCodes[KEY_F1]);
+                int view = code - scanCodes[KEY_F1];
+                int pid = getByView(view);
+                cleanInt();
+                contextSwitch(pid);
             }
             break;
         }

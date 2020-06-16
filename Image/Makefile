@@ -9,10 +9,10 @@ VMDK=$(OSIMAGENAME).vmdk
 QCOW2=$(OSIMAGENAME).qcow2
 IMG=$(OSIMAGENAME).img
 KERNEL=../Kernel/build/kernel.bin
-USERLAND= ../Userland
-USERLAND_BIN = $(shell find $(USERLAND) -name *.bin)
+USERLAND= ../Userland/build
+USERLAND_BIN = $(shell find $(USERLAND) -name *.bin) $(USERLAND)/list.txt
 
-IMGSIZE=6291456
+IMGSIZE=67108864
 
 all: $(IMG) $(USERLAND_BIN) $(VMDK) $(QCOW2)
 
@@ -21,13 +21,13 @@ $(KERNEL):
 
 $(IMG): $(BMFS) $(MBR) $(PURE64) $(KERNEL)
 	$(BMFS) $(IMG) initialize $(IMGSIZE) $(MBR) $(PURE64) $(KERNEL) 
-	$(BMFS_NEW) -d $(IMG) format -s $(IMGSIZE) -b 512
+	$(BMFS_NEW) -d $(IMG) format -s $(IMGSIZE)
 	$(BMFS_NEW) -d $(IMG) mkdir userland
 	@touch .image
 
-$(USERLAND)/%.bin: .image
+$(USERLAND_BIN): $(USERLAND)/%: .image
 	@echo Copying $@...
-	$(BMFS_NEW) -d $(IMG) cp $@ userland/$*.bin
+	$(BMFS_NEW) -d $(IMG) cp $@ userland/$*
 	@touch $@
 
 $(VMDK): $(IMG)

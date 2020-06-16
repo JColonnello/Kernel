@@ -421,6 +421,9 @@ void kfree(void *ptr)
 {
 	MallocNode **lastNode = &firstNode;
 
+	if(ptr == NULL)
+		return;
+
 	while(*lastNode != NULL)
 	{
 		MallocNode *node = *lastNode;

@@ -31,6 +31,7 @@ int vfscanf( FILE * _PDCLIB_restrict stream, const char * _PDCLIB_restrict forma
     status.stream = stream;
 
     _PDCLIB_LOCK( stream->mtx );
+    fflush(stdout);
 
     if ( _PDCLIB_prepread( stream ) == EOF )
     {

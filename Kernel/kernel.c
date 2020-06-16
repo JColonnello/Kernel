@@ -10,24 +10,29 @@
 
 int main()
 {	
-	createConsoleView(0,0,25,80);
+	createConsoleView(0,0,12,80);
+	createConsoleView(13,0,12,80);
 	diskInit();
-	
-	int before = getReservedPagesCount();
+	int pidShell = -1;
+	int pidCal = -1;
 
-	int pid = execve("userland/0000-sampleCodeModule.bin", NULL, NULL);
-	contextSwitch(pid);
-	ncPrint("Listo\n");
-
-	pid = execve("userland/0000-sampleCodeModule.bin", NULL, NULL);
-	contextSwitch(pid);
-	ncPrint("Listo\n");
-
-	int after = getReservedPagesCount();
-	ncPrintDec(before);
-	ncNewline();
-	ncPrintDec(after);
-
+	while(true)
+	{
+		if(!isRunning(pidShell))
+		{
+			changeFocus(1);
+			currentProcess()->tty = 1;
+			pidShell = execve("userland/shell.bin", NULL, NULL);
+			contextSwitch(pidShell);
+		}
+		if(!isRunning(pidCal))
+		{
+			changeFocus(0);
+			currentProcess()->tty = 0;
+			pidCal = execve("userland/calc.bin", NULL, NULL);
+			contextSwitch(pidCal);
+		}
+	}
 	_halt();
 	return 0;
 }
