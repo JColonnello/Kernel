@@ -118,14 +118,14 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     if(pathlen > 255)
         return -1;
 
-    int pid = createProcess(&pdnew);
-    if(pid < 0)
-        return -1;
-    
     int fd = open(pathname, O_RDONLY);
     if(fd < 0)
         return -1;
         
+    int pid = createProcess(&pdnew);
+    if(pid < 0)
+        return -1;
+    
     size_t argLen = 2;
     char defkargs[2] = {0};
     char *kargs = defkargs;
@@ -210,9 +210,9 @@ int exit(int status)
     exitProcess();
 }
 
-static void wait(int pid)
+void wait(int pid)
 {
-    contextSwitch(pid);
+    giveFocus(pid);
 }
 
 static int getpid()

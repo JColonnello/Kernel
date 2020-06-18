@@ -44,9 +44,12 @@ bool isRunning(int pid)
     return inUse[pid];
 }
 
-int getByView(int view)
+ProcessDescriptor *getByView(int view)
 {
-    return (view < MAX_VIEWS) ? byViews[view] : -1;
+    if(view >= MAX_VIEWS)
+        return NULL;
+    int pid = byViews[view];
+    return &descriptors[pid];
 }
 
 uintptr_t getKernelStack()
@@ -54,23 +57,17 @@ uintptr_t getKernelStack()
     return descriptors[0].stack;
 }
 
-extern void _switch(uintptr_t pml4, uintptr_t newStack, uintptr_t *stackSave);
+extern void _switch(uintptr_t pml4, uintptr_t *newStack, uintptr_t *stackSave);
 
-void contextSwitch(int pid)
+void contextSwitch(ProcessDescriptor *next)
 {
-    if(pid >= MAX_PID || pid < 0)
-        return;
-    
-    ProcessDescriptor *curr = currentProcess(), *next = &descriptors[pid];
+    ProcessDescriptor *curr = currentProcess();
 
-    if(next->pid != 0)
-        byViews[next->tty] = next->pid;
     currentPID = next->pid;
-    changeFocus(next->tty);
-    _switch(next->pml4, next->stack, &curr->stack);
+    _switch(next->pml4, &next->stack, &curr->stack);
 }
 
-extern void _dropAndLeave(uintptr_t pml4, uintptr_t newStack);
+extern void _dropAndLeave(uintptr_t pml4, uintptr_t *newStack);
 
 void exitProcess()
 {
@@ -87,6 +84,27 @@ void exitProcess()
     {
         byViews[pd->tty] = parent->pid;
         currentPID = parent->pid;
-        _dropAndLeave(parent->pml4, parent->stack);
+        _dropAndLeave(parent->pml4, &parent->stack);
     }
+}
+
+void giveFocus(int pid)
+{
+    if(pid >= MAX_PID || pid < 0)
+        return;
+
+    ProcessDescriptor *curr = currentProcess(), *next = &descriptors[pid];
+
+    if(next->parent != curr)
+        return;
+
+    byViews[next->tty] = next->pid;
+    contextSwitch(next);
+}
+
+void changeFocus(int tty)
+{
+    ProcessDescriptor *next = getByView(tty);
+    changeTTY(tty);
+    contextSwitch(next);
 }

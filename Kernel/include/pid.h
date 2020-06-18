@@ -22,8 +22,8 @@ struct ProcessDescriptor
 
 ProcessDescriptor *currentProcess();
 int createProcess(ProcessDescriptor **out);
-int getByView(int view);
 uintptr_t getKernelStack();
-void contextSwitch(int pid);
 bool isRunning(int pid);
 void exitProcess();
+void giveFocus(int pid);
+void changeFocus(int tty);

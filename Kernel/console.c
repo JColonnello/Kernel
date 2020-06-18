@@ -241,7 +241,7 @@ int inputBufferRead(int id, char *dest, size_t count)
 }
 
 
-void changeFocus(int id)
+void changeTTY(int id)
 {
     if(views[id].lines != NULL)
         focusedView = id;

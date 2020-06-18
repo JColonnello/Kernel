@@ -23,3 +23,4 @@ int read(int fd, void *buf, size_t count);
 int write(int fd, const void *buf, size_t count);
 int open(const char *path, int mode);
 int execve(const char *pathname, char *const argv[], char *const envp[]);
+void wait(int pid);

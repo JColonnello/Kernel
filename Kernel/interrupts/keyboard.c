@@ -321,9 +321,8 @@ void keyboardHandler()
             else if(code >= scanCodes[KEY_F1] && code <= scanCodes[KEY_F10])
             {
                 int view = code - scanCodes[KEY_F1];
-                int pid = getByView(view);
                 cleanInt();
-                contextSwitch(pid);
+                changeFocus(view);
             }
             break;
         }

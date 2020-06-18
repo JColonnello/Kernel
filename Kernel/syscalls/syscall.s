@@ -96,7 +96,7 @@ _dropAndLeave:
 	jmp _abandon
 
 ; RDI = pml4
-; RSI = new rsp
+; RSI = pointer to new rsp
 ; RDX = pointer to save rsp
 _switch:
 	pushContext
@@ -106,7 +106,7 @@ _switch:
 _abandon:
 	or rdi, 0x8
     mov cr3, rdi
-	mov rsp, rsi
+	mov rsp, [rsi]
 	ret ; Jump to other process
 
 _resume:
