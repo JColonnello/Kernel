@@ -133,6 +133,16 @@ int createConsoleView(int startY, int startX, int height, int width)
     return id;
 }
 
+void update_cursor(int x, int y)
+{
+	uint16_t pos = y * 80 + x;
+ 
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
 void viewflush(int id)
 {
     ConsoleView view = views[id];
@@ -152,6 +162,7 @@ void viewflush(int id)
         outY++;
         bufY++;
     }
+    update_cursor(view.startX + view.lineCursor, outY-1);
 }
 
 void viewLF(int id)
@@ -245,6 +256,8 @@ void changeTTY(int id)
 {
     if(views[id].lines != NULL)
         focusedView = id;
+
+    viewflush(id);
 }
 
 static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);

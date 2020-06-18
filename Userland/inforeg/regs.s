@@ -23,7 +23,8 @@ main:
 	push rdi
 	push rsi
 	push rbp
-    push rsp
+	mov rax, [bak]
+    push rax
     mov rsp, [bak]
     mov rdi, struct
     call printreg

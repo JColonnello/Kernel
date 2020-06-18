@@ -9,8 +9,7 @@ int main(int argc, char *argv[])
     {
         printf("> ");
         char cmd[32];
-        fflush(stdout);
-        scanf("%31[^\n]s", cmd);
+        scanf("%31[^\n]", cmd);
         getchar();
 
         char path[64];

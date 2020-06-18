@@ -19,5 +19,6 @@ size_t getReservedMemoryCount();
 void libInit();
 char *cpuVendor(char *result);
 void _halt();
+void outb(uint16_t port, uint8_t data);
 
 #endif

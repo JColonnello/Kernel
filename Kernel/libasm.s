@@ -4,6 +4,7 @@ GLOBAL _halt
 global _hlt
 global _wait
 global _syscall
+global outb
 
 section .text
 	
@@ -29,6 +30,12 @@ cpuVendor:
 
 	mov rsp, rbp
 	pop rbp
+	ret
+
+outb:
+	mov rdx, rdi
+	mov rax, rsi
+	out dx, al
 	ret
 
 _wait:
