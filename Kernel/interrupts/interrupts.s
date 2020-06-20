@@ -58,48 +58,94 @@ SECTION .text
 	pop rsp
 %endmacro
 
-%assign i 0
-%rep 0x20
-_exception_%[i]_Handler:
-	push qword i
-	jmp _exception_Handler
+%macro EC_exceptionHandler 1
+_exception_%1_Handler:
+	push qword %1
+	jmp exceptionGate
+%endmacro
+
+%macro NoEC_exceptionHandler 1
+_exception_%1_Handler:
+	push qword 0	; Push error code 0
+	push qword %1
+	jmp exceptionGate
+%endmacro
+
+NoEC_exceptionHandler 0
+NoEC_exceptionHandler 1
+NoEC_exceptionHandler 2
+NoEC_exceptionHandler 3
+NoEC_exceptionHandler 4
+NoEC_exceptionHandler 5
+NoEC_exceptionHandler 6
+NoEC_exceptionHandler 7
+EC_exceptionHandler 8
+NoEC_exceptionHandler 9
+EC_exceptionHandler 10
+EC_exceptionHandler 11
+EC_exceptionHandler 12
+EC_exceptionHandler 13
+EC_exceptionHandler 14
+NoEC_exceptionHandler 15
+NoEC_exceptionHandler 16
+EC_exceptionHandler 17
+NoEC_exceptionHandler 18
+NoEC_exceptionHandler 19
+NoEC_exceptionHandler 20
+%assign i 21
+%rep 30 - 21
+NoEC_exceptionHandler i
 %assign i i+1
 %endrep
+EC_exceptionHandler 30
+NoEC_exceptionHandler 31
 
-_exception_Handler:
+exceptionGate:
 	pushState
 	mov rax, [rsp + 8 * 16] ; i
 	shl rax, 3
-	add rax, exceptionTable
+	mov rbx, exceptionTable
+	add rax, rbx
 	mov rax, [rax]
 	test rax, rax
 	jnz .call
 	mov rax, defaultException
 .call:	
-	call rax
+	mov rbx, rax
+	push rbx
+	mov rax, [rsp+8]
+	mov rbx, [rsp+16]
+	call [rsp]
+	add rsp, 8
 	popState
-	add rsp, 8	;pop i
+	add rsp, 16	;pop i and error code
 	iretq
 
 %assign i 0
 %rep 0x30 - 0x20
 _irq_%[i]_Handler:
 	push qword i
-	jmp _irq_Handler
+	jmp irqGate
 %assign i i+1
 %endrep
 
-_irq_Handler:
+irqGate:
 	pushState
 	mov rax, [rsp + 8 * 16] ; i
 	shl rax, 3
-	add rax, irqTable
+	mov rbx, irqTable
+	add rax, rbx
 	mov rax, [rax]
 	test rax, rax
 	jnz .call
 	mov rax, defaultInterrupt
 .call:	
-	call rax
+	mov rbx, rax
+	push rbx
+	mov rax, [rsp+8]
+	mov rbx, [rsp+16]
+	call [rsp]
+	add rsp, 8
 	; signal pic EOI (End of Interrupt)
 	mov al, 20h
 	out 20h, al
@@ -111,24 +157,29 @@ _irq_Handler:
 %rep 0x100 - 0x30
 _int_%[i]_Handler:
 	push qword i
-	jmp _int_Handler
+	jmp intGate
 %assign i i+1
 %endrep
 
-_int_Handler:
+intGate:
 	pushState
 	mov rax, [rsp + 8 * 16] ; i
 	shl rax, 3
-	add rax, intTable
+	mov rbx, intTable
+	add rax, rbx
 	mov rax, [rax]
 	test rax, rax
 	jnz .call
 	mov rax, defaultInterrupt
 .call:	
-	call rax
-	; replace stored rax for returned value
+	mov rbx, rax
+	push rbx
+	mov rax, [rsp+8]
+	mov rbx, [rsp+16]
+	call [rsp]
 	add rsp, 8
-	push rax
+	; replace stored rax for returned value
+	mov [rsp], rax
 	popState
 	add rsp, 8	;pop i
 	iretq
@@ -137,7 +188,8 @@ setupIDTHandlers:
 	mov rdi, __startOfUniverse
 	%assign i 0x20 - 1
 	%rep 0x20
-	push _exception_%[i]_Handler
+	mov rax, _exception_%[i]_Handler
+	push rax
 	%assign i i-1
 	%endrep
 	mov rcx, 0x20
@@ -148,7 +200,8 @@ setupIDTHandlers:
 
 	%assign i 0x30 - 0x20 - 1
 	%rep 0x30 - 0x20
-	push _irq_%[i]_Handler
+	mov rax, _irq_%[i]_Handler
+	push rax
 	%assign i i-1
 	%endrep
 	mov rcx,  0x30 - 0x20
@@ -159,7 +212,8 @@ setupIDTHandlers:
 
 	%assign i 0x100 - 0x30 - 1
 	%rep 0x100 - 0x30
-	push _int_%[i]_Handler
+	mov rax, _int_%[i]_Handler
+	push rax
 	%assign i i-1
 	%endrep
 	mov rcx, 0x100 - 0x30
@@ -211,20 +265,20 @@ defaultException:
 	mov rdi, int_string
 	call ncPrint
 	mov rdi, exc_string
-	mov rax, [rsp + 8*17]		; Exception number
+	mov rax, [rsp + 8*18]		; Exception number
 	and rax, 0xFF			; Clear out everything in RAX except for AL
 	shl rax, 3				; Quick multiply by 3
 	add rdi, rax			; Use the value in RAX as an offset to get to the right message
 	call ncPrint
 	mov rdi, adr_string
 	call ncPrint
-	; Skip return address, exception number, 16 pushed regs
-	mov rdi, [rsp+0x8*18]	; RIP
+	; Skip return address, handler, 16 pushed regs, exception number, error code
+	mov rdi, [rsp + 8*20]	; RIP
 	call ncPrintPointer
 	call ncNewline
-	lea rdi, [rsp+8]		; RAX
+	lea rdi, [rsp + 8*2]		; RAX
 	call os_dump_regs
-	mov rdi, [rsp + 8*17]
+	mov rdi, [rsp + 8*18]		; Exception number
 	call exit
 	ret
 
@@ -254,18 +308,17 @@ picSlaveMask:
 
 
 os_dump_regs:
-	mov byte [os_dump_reg_stage], 0x00	; Reset the stage to 0 since we are starting
+	push rbx
+	mov rbx, os_dump_reg_stage
+	mov byte [rbx], 0x00	; Reset the stage to 0 since we are starting
 	mov rbx, rdi
 	call ncNewline
 
-os_dump_regs_again:
-	mov rdi, os_dump_reg_string
-	xor rax, rax
-	xor rcx, rcx
-	mov al, [os_dump_reg_stage]
-	mov cl, 5				; each string is 5 bytes
-	mul cl					; ax = cl x al
-	add rdi, rax
+.again:
+	mov rax, os_dump_reg_stage
+	mov al, [rax]
+	and rax, 0xFF
+	lea rdi, [os_dump_reg_string + rax * 5]
 	call ncPrint			; Print the register name
 
 	mov rax, [rbx]
@@ -273,9 +326,11 @@ os_dump_regs_again:
 	mov rdi, rax
 	call ncPrintPointer
 
-	add byte [os_dump_reg_stage], 1
-	cmp byte [os_dump_reg_stage], 0x10
-	jne os_dump_regs_again
+	mov rax, os_dump_reg_stage
+	add byte [rax], 1
+	cmp byte [rax], 0x10
+	jne .again
+	pop rbx
 	ret
 
 os_dump_reg_string: 

@@ -10,6 +10,7 @@ LOADERSRC=loader.asm
 INC_DIRS = ./include ../BMFS/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 BMFS_LIB = ../BMFS/libbmfs.a
+DEP_FLAGS := -MMD -MP
 
 LOADEROBJECT=$(LOADERSRC:%.asm=$(BUILD_DIR)/%.o)
 STATICLIBS=
@@ -22,7 +23,7 @@ $(BUILD_DIR)/$(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM) 
 
 $(BUILD_DIR)/%.c.o: %.c
 	$(MKDIR_P) $(dir $@)
-	$(GCC) $(GCCFLAGS) -g $(INC_FLAGS) -c $< -o $@
+	$(GCC) $(GCCFLAGS) $(DEP_FLAGS) -g $(INC_FLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.s.o : %.s
 	$(MKDIR_P) $(dir $@)
@@ -36,5 +37,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 .PHONY: all clean
+
+-include $(OBJECTS:%.o=%.d)
 
 MKDIR_P ?= mkdir -p

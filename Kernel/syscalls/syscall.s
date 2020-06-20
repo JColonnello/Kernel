@@ -51,11 +51,12 @@ extern dropTable
 %endmacro
 
 syscallHandler:
-    mov rax, [rsp + 8]
-    cmp rax, [funcTableSize]
+	mov rcx, funcTableSize
+    cmp rax, [rcx]
     jge .ret
 	shl rax, 3
-	add rax, funcTable
+	mov rcx, funcTable
+	add rax, rcx
     mov rax, [rax]
     test rax, rax
     jz .ret
@@ -100,7 +101,8 @@ _dropAndLeave:
 ; RDX = pointer to save rsp
 _switch:
 	pushContext
-	push qword _resume
+	mov rax, _resume
+	push rax
 
 	mov [rdx], rsp
 _abandon:

@@ -15,7 +15,8 @@ section .text_loader
 
 loader:
 	mov rcx, __endOfKernel		; Calculate mapped space in pages
-	sub rcx, __startOfUniverse
+	mov rax, __startOfUniverse
+	sub rcx, rax
 	shr rcx, 12					; Divide by 4K
 	mov rdx, rcx				; Backup count
 
@@ -61,7 +62,8 @@ loader:
 
 	mov rax, PML4_ADDR | 0x8
 	mov cr3, rax					; Update CR3
-	add rsp, __startOfUniverse		; Set stack to high half
+	mov rax, __startOfUniverse
+	add rsp, rax					; Set stack to high half
 	mov rax, longJump
 	jmp rax
 
@@ -104,8 +106,10 @@ longJump:
 	add rdi, 8
 	loop .fixIDT
 	; Reload GDT & IDT
-	lgdt [GDTR64]
-	lidt [IDTR64]
+	mov rax, GDTR64
+	lgdt [rax]
+	mov rax, IDTR64
+	lidt [rax]
 
 .finish
 	mov rdi, _init

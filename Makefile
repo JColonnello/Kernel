@@ -18,7 +18,7 @@ libc:
 	$(MAKE) -C libc
 
 userland:
-	$(MAKE) -C Userland clean
+	# $(MAKE) -C Userland clean
 	$(MAKE) -C Userland
 
 image: kernel bootloader userland

@@ -1,5 +1,6 @@
 SOURCES := $(shell find lib/ -name *.c)
 OBJS := $(SOURCES:%.c=build/%.o)
+CFLAGS := -m64 -mno-red-zone -ffreestanding -std=c99
 INC_DIR := include
 LIB := libbmfs.a
 
@@ -8,9 +9,9 @@ $(LIB): $(OBJS)
 
 build/%.o: %.c
 	mkdir -p $(dir $@)
-	$(CC) -std=c99 -fno-stack-protector -g -c -o $@ -I$(INC_DIR) $^
+	$(CC) $(CFLAGS) -g -c -o $@ -I$(INC_DIR) $^
 
 clean:
-	rm -r build $(LIB)
+	rm -rf build $(LIB)
 
 .PHONY: clean

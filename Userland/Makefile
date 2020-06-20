@@ -1,11 +1,11 @@
-GCC=$(HOME)/Documents/Arqui/toolchain/opt/cross/bin/amd64-elf-gcc
+GCC=gcc
 LD=ld
 AR=ar
 ASM=nasm
 
 INC_DIRS := $(CURDIR)/../../libc/include
 INC_FLAGS = $(addprefix -I,$(INC_DIRS))
-GCCFLAGS= $(INC_FLAGS) -m64 -fno-exceptions -fno-asynchronous-unwind-tables -fno-builtin-malloc -fno-builtin-free -fno-builtin-realloc -mno-red-zone -Wall -ffreestanding -nostdlib -fno-common -std=c99
+GCCFLAGS= $(INC_FLAGS) -m64 -mno-red-zone -Wall -ffreestanding -std=c99
 ARFLAGS=rvs
 ASMFLAGS=-felf64
 LDFLAGS=--warn-common -z max-page-size=0x1000
@@ -41,7 +41,7 @@ $(BUILD_DIR)/%.s.o : %.s
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf build
 
 .PHONY: sampleCodeModule all clean list
 MKDIR_P ?= mkdir -p
