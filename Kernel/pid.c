@@ -54,7 +54,12 @@ ProcessDescriptor *getByView(int view)
 
 uintptr_t getKernelStack()
 {
-    return descriptors[0].stack;
+    return (uintptr_t)kmalloc(PAGE_SIZE * 4) + PAGE_SIZE * 4;
+}
+
+void freeKernelStack(uintptr_t stack)
+{
+    kfree((void*)(stack - PAGE_SIZE * 4));
 }
 
 extern void _switch(uintptr_t pml4, uintptr_t *newStack, uintptr_t *stackSave);

@@ -206,6 +206,25 @@ int viewWrite(int id, const char *text, size_t n)
                 case '\r':
                     view->lineCursor = 0;
                     break;
+                case '\b':
+                    if(view->lineCursor == 0)
+                    {
+                        if(view->lineCount > 0)
+                        {
+                            view->lineCursor = view->width - 1;
+                            if(view->lineEnd == 0)
+                                view->lineEnd = view->maxLines - 1;
+                            else
+                                view->lineEnd--;
+                            view->lineCount--;
+                        }
+                        else
+                            view->lineCursor = 0;
+                    }
+                    else
+                        view->lineCursor--;
+                    (*buf)[view->lineEnd][view->lineCursor].symbol = 0;
+                    break;
             }
         }
         else
@@ -216,14 +235,41 @@ int viewWrite(int id, const char *text, size_t n)
     return n;
 }
 
+static bool flushInput = false;
+
 void inputBufferWrite(char c)
 {
     ConsoleView *view = &views[focusedView];
+    static int canDelete = 0;
 
-    if(view->inputCount < view->maxInput)
+    if(c == '\b')
+    {
+        if(canDelete > 0)
+        {
+            view->inputCount--;
+            canDelete--;
+            viewWrite(focusedView, &c, 1);
+        }
+    }
+    else if(c == '\e')
+    {
+        char buf[canDelete];
+        memset(buf, '\b', sizeof(buf));
+        viewWrite(focusedView, buf, sizeof(buf));
+        view->inputCount -= canDelete;
+        canDelete = 0;
+    }
+    else if(view->inputCount < view->maxInput)
+    {
+        canDelete++;
         view->input[(view->inputStart + view->inputCount++) % view->maxInput] = c;
-
-    viewWrite(focusedView, &c, 1);
+        if(c == '\n')
+        {
+            canDelete=0;
+            flushInput = true;
+        }
+        viewWrite(focusedView, &c, 1);
+    }
 }
 
 int inputBufferRead(int id, char *dest, size_t count)
@@ -233,21 +279,22 @@ int inputBufferRead(int id, char *dest, size_t count)
     
     if(view->input == NULL)
         return 0;
-
     bool done = false;
-    for(i = 0; i < count && !done; i++, view->inputCount--)
+    for(i = 0; i < count && !done; i++)
     {
-        while(view->inputCount == 0)
+        while(view->inputCount < (count - i) && view->inputCount < view->maxInput && !flushInput)
             _hlt();
-
         dest[i] = view->input[view->inputStart++];
         if(view->inputStart == view->maxInput)
             view->inputStart = 0;
+        view->inputCount--;
 
-        if(dest[i] == '\n')
+        if(flushInput && view->inputCount == 0)
+        {
             done = true;
+            flushInput = false;
+        }
     }
-    
     return i;
 }
 

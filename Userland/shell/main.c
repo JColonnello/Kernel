@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
         printf("> ");
         char cmd[32];
         scanf("%31[^\n]", cmd);
-        getchar();
+        while(getchar() != '\n');
 
         char path[64];
         char *param = strchr(cmd,' ');

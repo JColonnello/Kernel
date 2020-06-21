@@ -43,7 +43,7 @@ typedef struct
     void *buffer;
 } AtaDisk;
 
-static AtaDisk data = (AtaDisk)
+static AtaDisk data =
 {
     .size = 6291456,
     .offset = 512,

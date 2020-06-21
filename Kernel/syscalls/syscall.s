@@ -4,12 +4,13 @@ GLOBAL _execve
 GLOBAL _switch
 GLOBAL _abandon
 GLOBAL _dropAndLeave
+GLOBAL temp
 extern funcTable
 extern funcTableSize
 extern getKernelStack
+extern freeKernelStack
 extern execve
 extern dropTable
-extern temp
 
 %macro pushContext 0
 	push rsp
@@ -29,9 +30,17 @@ extern temp
 	push rbx
 	push rax
     pushfq
+	lea rax, [rsp - 512 - 8]
+	and rax, ~0xF
+	fxsave [rax]
+	mov [rax + 512], rsp
+	mov rsp, rax
 %endmacro
 
 %macro popContext 0
+	fxrstor [rsp]
+	add rsp, 512
+	pop rsp
     popfq
 	pop rax
 	pop rbx
@@ -68,12 +77,28 @@ syscallHandler:
 ; Change to kernel stack before rutine
 _execve:
     push rbp
-    call getKernelStack
-    mov rbx, rsp
+	push rdi
+	push rsi
+	push rdx
+	call getKernelStack
+	pop rdx
+	pop rsi
+	pop rdi
+
+    mov rcx, rsp
     mov rsp, rax
-    push rbx
+	mov rbp, rax
+    push rcx
+
+	cli
     call execve
+	sti
+
     pop rsp
+	mov rdi, rbp
+	push rax
+	call freeKernelStack
+	pop rax
     pop rbp
     ret
 
@@ -89,12 +114,19 @@ _dropAndLeave:
 	call getKernelStack
 	pop rsi
 	pop rdi
+	mov rbp, rax
 	mov rsp, rax
 	push rdi
 	push rsi
 	call dropTable
 	pop rsi
 	pop rdi
+	mov r12, rdi
+	mov r13, rsi
+	mov rdi, rbp
+	call freeKernelStack
+	mov rdi, r12
+	mov rsi, r13
 	jmp _abandon
 
 ; RDI = pml4

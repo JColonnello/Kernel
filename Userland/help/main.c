@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main()
 {
@@ -12,7 +13,9 @@ int main()
     char buf[64];
     while(fgets(buf, sizeof(buf), file) != NULL)
     {
-        printf("%s", buf);
+        buf[strlen(buf)-1] = 0;
+        printf("%-20s", buf);
     }
     fclose(file);
+    return 0;
 }

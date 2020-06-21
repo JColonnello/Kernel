@@ -331,7 +331,9 @@ os_dump_regs:
 	mov rax, os_dump_reg_stage
 	mov al, [rax]
 	and rax, 0xFF
-	lea rdi, [os_dump_reg_string + rax * 5]
+	lea rdi, [rax * 5]
+	mov rax, os_dump_reg_string
+	add rdi, rax
 	call ncPrint			; Print the register name
 
 	mov rax, [rbx]
