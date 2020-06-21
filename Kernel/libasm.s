@@ -5,6 +5,7 @@ global _hlt
 global _wait
 global _syscall
 global outb
+global inb
 
 section .text
 	
@@ -14,18 +15,17 @@ cpuVendor:
 
 	push rbx
 
-	mov rax, 0
+	mov eax, esi
 	cpuid
 
+	test rdi, rdi
+	jz .end
 
-	mov [rdi], ebx
-	mov [rdi + 4], edx
+	mov [rdi], eax
+	mov [rdi + 4], ebx
 	mov [rdi + 8], ecx
-
-	mov byte [rdi+13], 0
-
-	mov rax, rdi
-
+	mov [rdi + 12], edx
+.end
 	pop rbx
 
 	mov rsp, rbp
@@ -36,6 +36,12 @@ outb:
 	mov rdx, rdi
 	mov rax, rsi
 	out dx, al
+	ret
+
+inb:
+	mov rdx, rdi
+	xor rax, rax
+	in al, dx
 	ret
 
 _wait:

@@ -192,7 +192,7 @@ int viewWrite(int id, const char *text, size_t n)
         if(view->lineCursor >= view->width)
             viewLF(id);
         
-        char c = *text;
+        unsigned char c = *text;
         //Control character
         if(c < 0x20)
         {

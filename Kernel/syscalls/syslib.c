@@ -7,6 +7,8 @@
 #include "naiveConsole.h"
 #include "stdio.h"
 #include <disk.h>
+#include "time.h"
+#include "types.h"
 
 #define MAX_FD 128
 typedef int (Syscall)(void);
@@ -220,19 +222,6 @@ static int getpid()
     return currentProcess()->pid;
 }
 
-struct tm
-{
-    int tm_sec;   /* 0-60 */
-    int tm_min;   /* 0-59 */
-    int tm_hour;  /* 0-23 */
-    int tm_mday;  /* 1-31 */
-    int tm_mon;   /* 0-11 */
-    int tm_year;  /* years since 1900 */
-    int tm_wday;  /* 0-6 */
-    int tm_yday;  /* 0-365 */
-    int tm_isdst; /* >0 DST, 0 no DST, <0 information unavailable */
-};
-
 size_t initFD(FileDescriptor **fdt, int tty)
 {
     size_t size = MAX_FD;
@@ -243,6 +232,31 @@ size_t initFD(FileDescriptor **fdt, int tty)
     (*fdt)[2].isOpen = true;
 
     return size;
+}
+
+int getcpuinfo(char *id, char *model)
+{
+    int tmp[4];
+    cpuVendor(tmp, 0);
+    memcpy(id, &tmp[1], 4);
+    memcpy(id+4, &tmp[3], 4);
+    memcpy(id+8, &tmp[2], 4);
+    id[12] = 0;
+
+    cpuVendor(model, 0x80000002);
+    cpuVendor(model + 16, 0x80000003);
+    cpuVendor(model + 32, 0x80000004);
+
+    return cpuVendor(NULL, 1);
+}
+
+extern void temp(uint8_t *curr_temp, uint8_t *max_temp);
+
+extern RegisterStatus lastRegisterStatus;
+
+void dumpregs(RegisterStatus *info)
+{
+    *info = lastRegisterStatus;
 }
 
 Syscall *funcTable[] = 
@@ -256,6 +270,10 @@ Syscall *funcTable[] =
     [59] = (Syscall*)_execve,
     [60] = (Syscall*)exit,
     [64] = (Syscall*)wait,
+    [400] = (Syscall*)temp,
+    [401] = (Syscall*)date,
+    [402] = (Syscall*)getcpuinfo,
+    [403] = (Syscall*)dumpregs,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

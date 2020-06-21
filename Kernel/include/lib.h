@@ -17,8 +17,9 @@ uintptr_t createPML4();
 size_t getReservedPagesCount();
 size_t getReservedMemoryCount();
 void libInit();
-char *cpuVendor(char *result);
+int cpuVendor(void *result, int code);
 void _halt();
 void outb(uint16_t port, uint8_t data);
+uint8_t inb(uint16_t port);
 
 #endif

@@ -39,7 +39,7 @@ loader:
 
 	mov rcx, 16
 	or rax, 0x7	; Reserve stack page
-.loopStack
+.loopStack:
 	add rax, 0x1000
 	stosq
 	loop .loopStack
@@ -111,7 +111,19 @@ longJump:
 	mov rax, IDTR64
 	lidt [rax]
 
-.finish
+	; Configure RTC
+	mov al, 0x0B
+	out 0x70, al
+	in al, 0x71
+	bts rax, 1
+	bts rax, 2
+	push rax
+	mov al, 0x0B
+	out 0x70, al
+	pop rax
+	out 0x71, al
+
+.finish:
 	mov rdi, _init
 	call rdi
 .hang:

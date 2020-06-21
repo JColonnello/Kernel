@@ -5,6 +5,7 @@
 #include "naiveConsole.h"
 #include "pid.h"
 #include <lib.h>
+#include "idtLoader.h"
 
 extern u8 _getKeyCode();
 
@@ -14,6 +15,13 @@ typedef enum
     KEYTYPE_MOD,
     KEYTYPE_CMD,
 } KeyType;
+
+typedef enum
+{
+    MOD_FLAG_SHIFT = 1,
+    MOD_FLAG_CTRL = 2,
+    MOD_FLAG_ALT = 4
+} ModFlag;
 
 typedef enum
 {
@@ -276,6 +284,12 @@ static char charMap[256][8] = {
 };
 #pragma endregion charMap
 
+RegisterStatus lastRegisterStatus;
+
+static void saveregs(const RegisterStatus *registers)
+{
+    lastRegisterStatus = *registers;
+}
 
 #define RELEASED 0x80
 #define SC_CTRL 0x1d
@@ -287,30 +301,30 @@ static char charMap[256][8] = {
 static u8 modStatus = 0;
 static bool capsLock = false;
 
-void keyboardHandler()
+void keyboardHandler(RegisterStatus *registers)
 {
     u8 code = _getKeyCode();
     switch(code)
     {
         case SC_CTRL:
-            modStatus |= 2;
+            modStatus |= MOD_FLAG_CTRL;
             break;
         case SC_CTRL + RELEASED:
-            modStatus &= ~2;
+            modStatus &= ~MOD_FLAG_CTRL;
             break;
         case SC_ALT:
-            modStatus |= 4;
+            modStatus |= MOD_FLAG_ALT;
             break;
         case SC_ALT + RELEASED:
-            modStatus &= ~4;
+            modStatus &= ~MOD_FLAG_ALT;
             break;
         case SC_SHIFT: case SC_RIGHT_SHIFT:
-            modStatus = capsLock ? modStatus & ~1 : modStatus | 1;
+            modStatus = capsLock ? modStatus & ~MOD_FLAG_SHIFT : modStatus | MOD_FLAG_SHIFT;
             break;
         case SC_CAPS_LOCK:
             capsLock = !capsLock;   //break omitted on purpose
         case SC_SHIFT + RELEASED: case SC_RIGHT_SHIFT + RELEASED:
-            modStatus = !capsLock ? modStatus & ~1 : modStatus | 1;
+            modStatus = !capsLock ? modStatus & ~MOD_FLAG_SHIFT : modStatus | MOD_FLAG_SHIFT;
             break;
         default:
         {
@@ -323,6 +337,10 @@ void keyboardHandler()
                 //Clean interrupt before switch
                 outb(0x20, 0x20);
                 changeFocus(view);
+            }
+            else if(code == scanCodes[KEY_NUM_DEL] && (modStatus & MOD_FLAG_CTRL) && (modStatus & MOD_FLAG_ALT))
+            {
+                saveregs(registers);
             }
             break;
         }

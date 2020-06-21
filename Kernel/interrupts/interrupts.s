@@ -102,7 +102,13 @@ NoEC_exceptionHandler 31
 
 exceptionGate:
 	pushState
-	mov rax, [rsp + 8 * 16] ; i
+	mov rdi, rsp
+	; Correct RSP to original value
+	lea rax, [rdi + 8 * 15] ; RSP
+	lea rbx, [rsp + 8 * 19]	; Skip all state
+	mov [rax], rbx
+
+	mov rax, [rdi + 8 * 16] ; i
 	shl rax, 3
 	mov rbx, exceptionTable
 	add rax, rbx
@@ -111,14 +117,11 @@ exceptionGate:
 	jnz .call
 	mov rax, defaultException
 .call:	
-	mov rbx, rax
-	push rbx
-	mov rax, [rsp+8]
-	mov rbx, [rsp+16]
+	push rax
 	call [rsp]
 	add rsp, 8
 	popState
-	add rsp, 16	;pop i and error code
+	sub rsp, 8	; Fix correction
 	iretq
 
 %assign i 0
@@ -131,7 +134,13 @@ _irq_%[i]_Handler:
 
 irqGate:
 	pushState
-	mov rax, [rsp + 8 * 16] ; i
+	mov rdi, rsp
+	; Correct RSP to original value
+	lea rax, [rdi + 8 * 15] ; RSP
+	lea rbx, [rsp + 8 * 18]	; Skip all state
+	mov [rax], rbx
+
+	mov rax, [rdi + 8 * 16] ; i
 	shl rax, 3
 	mov rbx, irqTable
 	add rax, rbx
@@ -140,17 +149,14 @@ irqGate:
 	jnz .call
 	mov rax, defaultInterrupt
 .call:	
-	mov rbx, rax
-	push rbx
-	mov rax, [rsp+8]
-	mov rbx, [rsp+16]
+	push rax
 	call [rsp]
 	add rsp, 8
 	; signal pic EOI (End of Interrupt)
 	mov al, 20h
 	out 20h, al
 	popState
-	add rsp, 8	;pop i
+	sub rsp, 8	; Fix correction
 	iretq
 
 %assign i 0
@@ -172,10 +178,10 @@ intGate:
 	jnz .call
 	mov rax, defaultInterrupt
 .call:	
-	mov rbx, rax
-	push rbx
+	push rax
 	mov rax, [rsp+8]
 	mov rbx, [rsp+16]
+	mov rcx, r10		; Adapt calling conventions
 	call [rsp]
 	add rsp, 8
 	; replace stored rax for returned value
@@ -261,25 +267,32 @@ defaultInterrupt:
 	ret
 
 defaultException:
+	push rbx
+	mov rbx, rdi
 	call ncNewline
 	mov rdi, int_string
 	call ncPrint
 	mov rdi, exc_string
-	mov rax, [rsp + 8*18]		; Exception number
+	mov rax, [rbx + 8*16]	; Exception number
 	and rax, 0xFF			; Clear out everything in RAX except for AL
 	shl rax, 3				; Quick multiply by 3
 	add rdi, rax			; Use the value in RAX as an offset to get to the right message
 	call ncPrint
 	mov rdi, adr_string
 	call ncPrint
-	; Skip return address, handler, 16 pushed regs, exception number, error code
-	mov rdi, [rsp + 8*20]	; RIP
+	; Skip 16 pushed regs, exception number, error code
+	mov rdi, [rbx + 8*18]	; RIP
+	call ncPrintPointer
+	mov rdi, ec_string
+	call ncPrint
+	mov rdi, [rbx + 8*17]	; Error code
 	call ncPrintPointer
 	call ncNewline
-	lea rdi, [rsp + 8*2]		; RAX
+	lea rdi, [rbx]		; RAX
 	call os_dump_regs
-	mov rdi, [rsp + 8*18]		; Exception number
+	mov rdi, [rbx + 8*16]	; Exception number
 	call exit
+	pop rbx
 	ret
 
 _hltForever:
@@ -354,6 +367,7 @@ os_dump_reg_string:
 os_dump_reg_stage: db 0x00
 int_string db 'Pure64 - Exception ', 0
 adr_string db ' @ 0x', 0
+ec_string db ' - EC = ', 0
 align 16
 exc_string:
 	db '00 - DE', 0

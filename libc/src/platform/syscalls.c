@@ -1,9 +1,11 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <platform.h>
 
 extern void *_brk(void *addr);
 
@@ -60,4 +62,9 @@ char *realpath(char *path, char *resolved)
     }
     strcpy(resolved, path);
     return resolved;
+}
+
+time_t time(time_t *tloc)
+{
+    return -1;
 }

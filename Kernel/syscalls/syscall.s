@@ -9,6 +9,7 @@ extern funcTableSize
 extern getKernelStack
 extern execve
 extern dropTable
+extern temp
 
 %macro pushContext 0
 	push rsp
@@ -51,12 +52,12 @@ extern dropTable
 %endmacro
 
 syscallHandler:
-	mov rcx, funcTableSize
-    cmp rax, [rcx]
+	mov r10, funcTableSize
+    cmp rax, [r10]
     jge .ret
 	shl rax, 3
-	mov rcx, funcTable
-	add rax, rcx
+	mov r10, funcTable
+	add rax, r10
     mov rax, [rax]
     test rax, rax
     jz .ret
@@ -114,4 +115,35 @@ _abandon:
 _resume:
 	; RIP has alredy been pop'd
 	popContext
+	ret
+
+temp:
+	push rbx
+	; Get MSR_TEMPERATURE_TARGET
+	mov ecx, 418
+
+	;rdmsr
+	; Mock data. Remove for use outside of QEMU
+	mov edx, 0
+	mov eax, 0x641400
+
+	shr eax, 16
+	and eax, 0xFF
+	mov bl, al
+	mov [rsi], bl
+
+	; Get MSR_TEMPERATURE_TARGET
+	mov ecx, 412
+
+	;rdmsr
+	; Mock data. Remove for use outside of QEMU
+	mov edx, 0
+	mov eax, 0x884e0000
+
+	shr eax, 16
+	and eax, 0x7F
+	sub bl, al
+	mov [rdi], bl
+
+	pop rbx
 	ret
