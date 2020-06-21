@@ -10,7 +10,9 @@ QCOW2=$(OSIMAGENAME).qcow2
 IMG=$(OSIMAGENAME).img
 KERNEL=../Kernel/build/kernel.bin
 USERLAND= ../Userland/build
+LAYOUTS= ../Layouts
 USERLAND_BIN = $(shell find $(USERLAND) -name *.bin) $(USERLAND)/list.txt
+LAYOUTS_FILES = $(shell find $(LAYOUTS)/* -printf "\"%f\" ")
 
 IMGSIZE=67108864
 
@@ -23,6 +25,10 @@ $(IMG): $(BMFS) $(MBR) $(PURE64) $(KERNEL)
 	$(BMFS) $(IMG) initialize $(IMGSIZE) $(MBR) $(PURE64) $(KERNEL) 
 	$(BMFS_NEW) -d $(IMG) format -s $(IMGSIZE)
 	$(BMFS_NEW) -d $(IMG) mkdir userland
+	$(BMFS_NEW) -d $(IMG) mkdir layouts
+	for f in $(LAYOUTS_FILES); do \
+	$(BMFS_NEW) -d $(IMG) cp "$(LAYOUTS)/$$f" "layouts/$$f"; \
+	done
 	@touch .image
 
 $(USERLAND_BIN): $(USERLAND)/%: .image

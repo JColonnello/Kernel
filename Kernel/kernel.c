@@ -13,6 +13,8 @@ int main()
 	createConsoleView(0,0,12,80);
 	createConsoleView(13,0,12,80);
 	diskInit();
+
+	switchLayout();
 	int pidShell = -1;
 	int pidCal = -1;
 

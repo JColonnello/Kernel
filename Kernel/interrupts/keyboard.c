@@ -11,13 +11,6 @@ extern u8 _getKeyCode();
 
 typedef enum
 {
-    KEYTYPE_SYMBOL = 0,
-    KEYTYPE_MOD,
-    KEYTYPE_CMD,
-} KeyType;
-
-typedef enum
-{
     MOD_FLAG_SHIFT = 1,
     MOD_FLAG_CTRL = 2,
     MOD_FLAG_ALT = 4
@@ -77,14 +70,6 @@ typedef enum
     KEY_F23,
     KEY_F24,
 } Key;
-
-static KeyType keyTypes[256] = 
-{
-    [KEY_CTRL] = KEYTYPE_MOD,
-    [KEY_SHIFT] = KEYTYPE_MOD,
-    [KEY_ALT] = KEYTYPE_MOD,
-    [KEY_RIGHT_SHIFT] = KEYTYPE_MOD,
-};
 
 static u8 scanCodes[256] = 
 {
@@ -166,122 +151,57 @@ static u8 scanCodes[256] =
 
 
 
-static char charMap[256][8] = {
+const char charMapOrig[256][8] = {
 /*                                                         alt
  * scan                       cntrl          alt    alt   cntrl
  * code  base   shift  cntrl  shift   alt   shift  cntrl  shift    spcl flgs
  * ---------------------------------------------------------------------------
  */
-/*00*/{  NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP, },
-/*01*/{ 0x1B,  0x1B,  0x1B,  0x1B,  0x1B,  0x1B,   DBG,  0x1B, },
-/*02*/{  '1',   '!',   NOP,   NOP,   '1',   '!',   NOP,   NOP, },
-/*03*/{  '2',   '@',  0x00,  0x00,   '2',   '@',  0x00,  0x00, },
-/*04*/{  '3',   '#',   NOP,   NOP,   '3',   '#',   NOP,   NOP, },
-/*05*/{  '4',   '$',   NOP,   NOP,   '4',   '$',   NOP,   NOP, },
-/*06*/{  '5',   '%',   NOP,   NOP,   '5',   '%',   NOP,   NOP, },
-/*07*/{  '6',   '^',  0x1E,  0x1E,   '6',   '^',  0x1E,  0x1E, },
-/*08*/{  '7',   '&',   NOP,   NOP,   '7',   '&',   NOP,   NOP, },
-/*09*/{  '8',   '*',   NOP,   NOP,   '8',   '*',   NOP,   NOP, },
-/*0a*/{  '9',   '(',   NOP,   NOP,   '9',   '(',   NOP,   NOP, },
-/*0b*/{  '0',   ')',   NOP,   NOP,   '0',   ')',   NOP,   NOP, },
-/*0c*/{  '-',   '_',  0x1F,  0x1F,   '-',   '_',  0x1F,  0x1F, },
-/*0d*/{  '=',   '+',   NOP,   NOP,   '=',   '+',   NOP,   NOP, },
-/*0e*/{ 0x08,  0x08,  0x7F,  0x7F,  0x08,  0x08,  0x7F,  0x7F, },
-/*0f*/{ 0x09,  BTAB,   NOP,   NOP,  0x09,  BTAB,   NOP,   NOP, },
-/*10*/{  'q',   'Q',  0x11,  0x11,   'q',   'Q',  0x11,  0x11, },
-/*11*/{  'w',   'W',  0x17,  0x17,   'w',   'W',  0x17,  0x17, },
-/*12*/{  'e',   'E',  0x05,  0x05,   'e',   'E',  0x05,  0x05, },
-/*13*/{  'r',   'R',  0x12,  0x12,   'r',   'R',  0x12,  0x12, },
-/*14*/{  't',   'T',  0x14,  0x14,   't',   'T',  0x14,  0x14, },
-/*15*/{  'y',   'Y',  0x19,  0x19,   'y',   'Y',  0x19,  0x19, },
-/*16*/{  'u',   'U',  0x15,  0x15,   'u',   'U',  0x15,  0x15, },
-/*17*/{  'i',   'I',  0x09,  0x09,   'i',   'I',  0x09,  0x09, },
-/*18*/{  'o',   'O',  0x0F,  0x0F,   'o',   'O',  0x0F,  0x0F, },
-/*19*/{  'p',   'P',  0x10,  0x10,   'p',   'P',  0x10,  0x10, },
-/*1a*/{  '[',   '{',  0x1B,  0x1B,   '[',   '{',  0x1B,  0x1B, },
-/*1b*/{  ']',   '}',  0x1D,  0x1D,   ']',   '}',  0x1D,  0x1D, },
-/*1c*/{  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A, },
-/*1d*/{ LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR, },
-/*1e*/{  'a',   'A',  0x01,  0x01,   'a',   'A',  0x01,  0x01, },
-/*1f*/{  's',   'S',  0x13,  0x13,   's',   'S',  0x13,  0x13, },
-/*20*/{  'd',   'D',  0x04,  0x04,   'd',   'D',  0x04,  0x04, },
-/*21*/{  'f',   'F',  0x06,  0x06,   'f',   'F',  0x06,  0x06, },
-/*22*/{  'g',   'G',  0x07,  0x07,   'g',   'G',  0x07,  0x07, },
-/*23*/{  'h',   'H',  0x08,  0x08,   'h',   'H',  0x08,  0x08, },
-/*24*/{  'j',   'J',  0x0A,  0x0A,   'j',   'J',  0x0A,  0x0A, },
-/*25*/{  'k',   'K',  0x0B,  0x0B,   'k',   'K',  0x0B,  0x0B, },
-/*26*/{  'l',   'L',  0x0C,  0x0C,   'l',   'L',  0x0C,  0x0C, },
-/*27*/{  ';',   ':',   NOP,   NOP,   ';',   ':',   NOP,   NOP, },
-/*28*/{ '\'',   '"',   NOP,   NOP,  '\'',   '"',   NOP,   NOP, },
-/*29*/{  '`',   '~',   NOP,   NOP,   '`',   '~',   NOP,   NOP, },
-/*2a*/{  LSH,   LSH,   LSH,   LSH,   LSH,   LSH,   LSH,   LSH, },
-/*2b*/{ '\\',   '|',  0x1C,  0x1C,  '\\',   '|',  0x1C,  0x1C, },
-/*2c*/{  'z',   'Z',  0x1A,  0x1A,   'z',   'Z',  0x1A,  0x1A, },
-/*2d*/{  'x',   'X',  0x18,  0x18,   'x',   'X',  0x18,  0x18, },
-/*2e*/{  'c',   'C',  0x03,  0x03,   'c',   'C',  0x03,  0x03, },
-/*2f*/{  'v',   'V',  0x16,  0x16,   'v',   'V',  0x16,  0x16, },
-/*30*/{  'b',   'B',  0x02,  0x02,   'b',   'B',  0x02,  0x02, },
-/*31*/{  'n',   'N',  0x0E,  0x0E,   'n',   'N',  0x0E,  0x0E, },
-/*32*/{  'm',   'M',  0x0D,  0x0D,   'm',   'M',  0x0D,  0x0D, },
-/*33*/{  ',',   '<',   NOP,   NOP,   ',',   '<',   NOP,   NOP, },
-/*34*/{  '.',   '>',   NOP,   NOP,   '.',   '>',   NOP,   NOP, },
-/*35*/{  '/',   '?',   NOP,   NOP,   '/',   '?',   NOP,   NOP, },
-/*36*/{  RSH,   RSH,   RSH,   RSH,   RSH,   RSH,   RSH,   RSH, },
-/*37*/{  '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*', },
-/*38*/{ LALT,  LALT,  LALT,  LALT,  LALT,  LALT,  LALT,  LALT, },
-/*39*/{  ' ',   ' ',  0x00,   ' ',   ' ',   ' ',  SUSP,   ' ', },
-/*3a*/{  CLK,   CLK,   CLK,   CLK,   CLK,   CLK,   CLK,   CLK, },
-/*3b*/{ F( 1), F(13), F(25), F(37), S( 1), S(11), S( 1), S(11),},
-/*3c*/{ F( 2), F(14), F(26), F(38), S( 2), S(12), S( 2), S(12),},
-/*3d*/{ F( 3), F(15), F(27), F(39), S( 3), S(13), S( 3), S(13),},
-/*3e*/{ F( 4), F(16), F(28), F(40), S( 4), S(14), S( 4), S(14),},
-/*3f*/{ F( 5), F(17), F(29), F(41), S( 5), S(15), S( 5), S(15),},
-/*40*/{ F( 6), F(18), F(30), F(42), S( 6), S(16), S( 6), S(16),},
-/*41*/{ F( 7), F(19), F(31), F(43), S( 7), S( 7), S( 7), S( 7),},
-/*42*/{ F( 8), F(20), F(32), F(44), S( 8), S( 8), S( 8), S( 8),},
-/*43*/{ F( 9), F(21), F(33), F(45), S( 9), S( 9), S( 9), S( 9),},
-/*44*/{ F(10), F(22), F(34), F(46), S(10), S(10), S(10), S(10),},
-/*45*/{  NLK,   NLK,   NLK,   NLK,   NLK,   NLK,   NLK,   NLK, },
-/*46*/{  SLK,   SLK,   SLK,   SLK,   SLK,   SLK,   SLK,   SLK, },
-/*47*/{ F(49),  '7',   '7',   '7',   '7',   '7',   '7',   '7', },
-/*48*/{ F(50),  '8',   '8',   '8',   '8',   '8',   '8',   '8', },
-/*49*/{ F(51),  '9',   '9',   '9',   '9',   '9',   '9',   '9', },
-/*4a*/{ F(52),  '-',   '-',   '-',   '-',   '-',   '-',   '-', },
-/*4b*/{ F(53),  '4',   '4',   '4',   '4',   '4',   '4',   '4', },
-/*4c*/{ F(54),  '5',   '5',   '5',   '5',   '5',   '5',   '5', },
-/*4d*/{ F(55),  '6',   '6',   '6',   '6',   '6',   '6',   '6', },
-/*4e*/{ F(56),  '+',   '+',   '+',   '+',   '+',   '+',   '+', },
-/*4f*/{ F(57),  '1',   '1',   '1',   '1',   '1',   '1',   '1', },
-/*50*/{ F(58),  '2',   '2',   '2',   '2',   '2',   '2',   '2', },
-/*51*/{ F(59),  '3',   '3',   '3',   '3',   '3',   '3',   '3', },
-/*52*/{ F(60),  '0',   '0',   '0',   '0',   '0',   '0',   '0', },
-/*53*/{ 0x7F,   '.',   '.',   '.',   '.',   '.',   RBT,   RBT, },
-/*54*/{  NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP, },
-/*55*/{  NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP, },
-/*56*/{  NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP, },
-/*57*/{ F(11), F(23), F(35), F(47), S(11), S(11), S(11), S(11),},
-/*58*/{ F(12), F(24), F(36), F(48), S(12), S(12), S(12), S(12),},
-/*59*/{ 0x0D,  0x0D,  0x0A,  0x0A,  0x0D,  0x0D,  0x0A,  0x0A, },
-/*5a*/{ RCTR,  RCTR,  RCTR,  RCTR,  RCTR,  RCTR,  RCTR,  RCTR, },
-/*5b*/{  '/',   '/',   '/',   '/',   '/',   '/',   '/',   '/', },
-/*5c*/{ NEXT,  PREV,   DBG,   DBG,   NOP,   NOP,   NOP,   NOP, },
-/*5d*/{ RALT,  RALT,  RALT,  RALT,  RALT,  RALT,  RALT,  RALT, },
-/*5e*/{ F(49), F(49), F(49), F(49), F(49), F(49), F(49), F(49),},
-/*5f*/{ F(50), F(50), F(50), F(50), F(50), F(50), F(50), F(50),},
-/*60*/{ F(51), F(51), F(51), F(51), F(51), F(51), F(51), F(51),},
-/*61*/{ F(53), F(53), F(53), F(53), F(53), F(53), F(53), F(53),},
-/*62*/{ F(55), F(55), F(55), F(55), F(55), F(55), F(55), F(55),},
-/*63*/{ F(57), F(57), F(57), F(57), F(57), F(57), F(57), F(57),},
-/*64*/{ F(58), F(58), F(58), F(58), F(58), F(58), F(58), F(58),},
-/*65*/{ F(59), F(59), F(59), F(59), F(59), F(59), F(59), F(59),},
-/*66*/{ F(60),PASTE,  F(60), F(60), F(60), F(60), F(60), F(60),},
-/*67*/{ F(61), F(61), F(61), F(61), F(61), F(61),  RBT,  F(61),},
-/*68*/{  SLK,  SPSC,   SLK,  SPSC,  SUSP,   NOP,  SUSP,   NOP, },
-/*69*/{ F(62), F(62), F(62), F(62), F(62), F(62), F(62), F(62),},
-/*6a*/{ F(63), F(63), F(63), F(63), F(63), F(63), F(63), F(63),},
-/*6b*/{ F(64), F(64), F(64), F(64), F(64), F(64), F(64), F(64),},
-/*6c*/{  NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP, },
+    [0x00] = {  NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP, },
+    [0x01] = { 0x1B,  0x1B,  0x1B,  0x1B,  0x1B,  0x1B,   DBG,  0x1B, },
+    [0x0e] = { 0x08,  0x08,  0x7F,  0x7F,  0x08,  0x08,  0x7F,  0x7F, },
+    [0x0f] = { 0x09,  BTAB,   NOP,   NOP,  0x09,  BTAB,   NOP,   NOP, },
+    [0x1c] = {  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A,  0x0A, },
+    [0x1d] = { LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR,  LCTR, },
+    [0x2a] = {  LSH,   LSH,   LSH,   LSH,   LSH,   LSH,   LSH,   LSH, },
+    [0x36] = {  RSH,   RSH,   RSH,   RSH,   RSH,   RSH,   RSH,   RSH, },
+    [0x37] = {  '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*', },
+    [0x38] = { LALT,  LALT,  LALT,  LALT,  LALT,  LALT,  LALT,  LALT, },
+    [0x39] = {  ' ',   ' ',  0x00,   ' ',   ' ',   ' ',  SUSP,   ' ', },
+    [0x3a] = {  CLK,   CLK,   CLK,   CLK,   CLK,   CLK,   CLK,   CLK, },
+    [0x45] = {  NLK,   NLK,   NLK,   NLK,   NLK,   NLK,   NLK,   NLK, },
+    [0x46] = {  SLK,   SLK,   SLK,   SLK,   SLK,   SLK,   SLK,   SLK, },
+    [0x47] = { F(49),  '7',   '7',   '7',   '7',   '7',   '7',   '7', },
+    [0x48] = { F(50),  '8',   '8',   '8',   '8',   '8',   '8',   '8', },
+    [0x49] = { F(51),  '9',   '9',   '9',   '9',   '9',   '9',   '9', },
+    [0x4a] = { F(52),  '-',   '-',   '-',   '-',   '-',   '-',   '-', },
+    [0x4b] = { F(53),  '4',   '4',   '4',   '4',   '4',   '4',   '4', },
+    [0x4c] = { F(54),  '5',   '5',   '5',   '5',   '5',   '5',   '5', },
+    [0x4d] = { F(55),  '6',   '6',   '6',   '6',   '6',   '6',   '6', },
+    [0x4e] = { F(56),  '+',   '+',   '+',   '+',   '+',   '+',   '+', },
+    [0x4f] = { F(57),  '1',   '1',   '1',   '1',   '1',   '1',   '1', },
+    [0x50] = { F(58),  '2',   '2',   '2',   '2',   '2',   '2',   '2', },
+    [0x51] = { F(59),  '3',   '3',   '3',   '3',   '3',   '3',   '3', },
+    [0x52] = { F(60),  '0',   '0',   '0',   '0',   '0',   '0',   '0', },
+    [0x53] = { 0x7F,   '.',   '.',   '.',   '.',   '.',   RBT,   RBT, },
+    [0x54] = {  NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP,   NOP, },
 };
+
+static char charMap[256][8];
+static bool isDeadKey[256][8];
+
+typedef struct
+{
+    uint8_t deadKey;
+    uint8_t tableEntries;
+    struct
+    {
+        uint8_t orig;
+        uint8_t dest;
+    } table[16];
+} DeadKeyEntry;
+static DeadKeyEntry deadKeyTables[16];
+static uint8_t deadKeyCount = 0;
 #pragma endregion charMap
 
 RegisterStatus lastRegisterStatus;
@@ -301,6 +221,80 @@ static void saveregs(const RegisterStatus *registers)
 static u8 modStatus = 0;
 static bool capsLock = false;
 
+void loadLayout(const char *file)
+{
+    int fd = open(file, O_RDONLY);
+    if(fd < 0)
+    {
+        ncPrint("File not found\n");
+        ncPrintDec(-fd);
+        return;
+    }
+
+    memcpy(charMap, charMapOrig, sizeof(charMapOrig));
+
+    char magic[4];
+    read(fd, magic, 4);
+    char name[32];
+    for(int i = 0; i < sizeof(name); i++)
+    {
+        read(fd, &name[i], 1);
+        if(name[i] == 0)
+            break;
+    }
+    uint8_t codeCount;
+    read(fd, &codeCount, 1);
+    memset(isDeadKey, 0, sizeof(isDeadKey));
+    for(int i = 0; i < codeCount; i++)
+    {
+        uint8_t scanCode;
+        read(fd, &scanCode, 1);
+        uint8_t cap;
+        read(fd, &cap, 1);
+        uint8_t statesCount;
+        read(fd, &statesCount, 1);
+        for(int j = 0; j < statesCount; j++)
+        {
+            uint8_t shiftState;
+            read(fd, &shiftState, 1);
+            if(shiftState & 0x80)
+            {
+                shiftState &= ~0x80;
+                isDeadKey[scanCode][shiftState] = true;
+            }
+            uint8_t ch;
+            read(fd, &ch, 1);
+            charMap[scanCode][shiftState] = ch;
+        }
+    }
+    read(fd, &deadKeyCount, 1);
+    for(int i = 0; i < deadKeyCount; i++)
+    {
+        DeadKeyEntry *entry = &deadKeyTables[i];
+        read(fd, &entry->deadKey, 1);
+        read(fd, &entry->tableEntries, 1);
+        for(int j = 0; j < entry->tableEntries; j++)
+        {
+            read(fd, &entry->table[j].orig, 1);
+            read(fd, &entry->table[j].dest, 1);
+        }
+    }
+    close(fd);
+}
+
+void switchLayout()
+{
+    static char *layouts[] = { "layouts/US", "layouts/Latin American" };
+    static uint8_t current = 1;
+    static uint8_t layoutCount = sizeof(layouts) / sizeof(*layouts);
+
+    current++;
+    current %= layoutCount;
+
+    loadLayout(layouts[current]);
+}
+
+static uint8_t dead = 0;
 void keyboardHandler(RegisterStatus *registers)
 {
     u8 code = _getKeyCode();
@@ -328,20 +322,58 @@ void keyboardHandler(RegisterStatus *registers)
             break;
         default:
         {
-            char c = charMap[code][modStatus];
-            if(c)
-                inputBufferWrite(c);
-            else if(code >= scanCodes[KEY_F1] && code <= scanCodes[KEY_F10])
+            if(code >= RELEASED)
+                break;
+            
+            uint8_t c = charMap[code][modStatus];
+            if(dead != 0)
+            {
+                int i;
+                for(i = 0; i < deadKeyCount; i++)
+                {
+                    if(deadKeyTables[i].deadKey == dead)
+                        break;
+                }
+                if(i == deadKeyCount)
+                    break;
+                
+                for(int j = 0; j < deadKeyTables[i].tableEntries; j++)
+                {
+                    if(deadKeyTables[i].table[j].orig == c)
+                    {
+                        c = deadKeyTables[i].table[j].dest;
+                        break;
+                    }
+                }
+                dead = 0;
+            }
+            else if(isDeadKey[code][modStatus])
+            {
+                dead = c;
+                break;
+            }
+
+            // Special commands
+            // Function keys
+            if(code >= scanCodes[KEY_F1] && code <= scanCodes[KEY_F10])
             {
                 int view = code - scanCodes[KEY_F1];
                 //Clean interrupt before switch
                 outb(0x20, 0x20);
                 changeFocus(view);
             }
+            // Ctrl + Alt + Supr
             else if(code == scanCodes[KEY_NUM_DEL] && (modStatus & MOD_FLAG_CTRL) && (modStatus & MOD_FLAG_ALT))
             {
                 saveregs(registers);
             }
+            // Alt + Space
+            else if(code == scanCodes[KEY_SPACE] && (modStatus & MOD_FLAG_ALT))
+            {
+                switchLayout();
+            }
+            else if(c)
+                inputBufferWrite(c);
             break;
         }
     }

@@ -21,5 +21,7 @@ int cpuVendor(void *result, int code);
 void _halt();
 void outb(uint16_t port, uint8_t data);
 uint8_t inb(uint16_t port);
+void loadLayout(const char *file);
+void switchLayout();
 
 #endif
