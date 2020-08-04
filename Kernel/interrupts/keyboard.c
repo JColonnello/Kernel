@@ -190,6 +190,8 @@ const char charMapOrig[256][8] = {
 static char charMap[256][8];
 static bool isDeadKey[256][8];
 
+#define DEAD_KEY_TABLE_SIZE 16
+#define DEAD_KEY_TABLE_CONV_SIZE 16
 typedef struct
 {
     uint8_t deadKey;
@@ -198,9 +200,9 @@ typedef struct
     {
         uint8_t orig;
         uint8_t dest;
-    } table[16];
+    } table[DEAD_KEY_TABLE_CONV_SIZE];
 } DeadKeyEntry;
-static DeadKeyEntry deadKeyTables[16];
+static DeadKeyEntry deadKeyTables[DEAD_KEY_TABLE_SIZE];
 static uint8_t deadKeyCount = 0;
 #pragma endregion charMap
 
@@ -268,12 +270,12 @@ void loadLayout(const char *file)
         }
     }
     read(fd, &deadKeyCount, 1);
-    for(int i = 0; i < deadKeyCount; i++)
+    for(int i = 0; i < deadKeyCount && i < DEAD_KEY_TABLE_SIZE; i++)
     {
         DeadKeyEntry *entry = &deadKeyTables[i];
         read(fd, &entry->deadKey, 1);
         read(fd, &entry->tableEntries, 1);
-        for(int j = 0; j < entry->tableEntries; j++)
+        for(int j = 0; j < entry->tableEntries && j < DEAD_KEY_TABLE_CONV_SIZE; j++)
         {
             read(fd, &entry->table[j].orig, 1);
             read(fd, &entry->table[j].dest, 1);

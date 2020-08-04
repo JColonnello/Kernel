@@ -16,6 +16,7 @@ int main()
         buf[strlen(buf)-1] = 0;
         printf("%-20s", buf);
     }
+    printf("\n");
     fclose(file);
     return 0;
 }

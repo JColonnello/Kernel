@@ -27,7 +27,7 @@ loader:
 
 	mov rcx, rdx
 	mov rdi, PT_ADDR	; Reserve pages for kernel
-	mov rax, 0xF		; Add access flags and cache pass-through		
+	mov rax, 0b1011		; Add access flags and cache pass-through		
 .load_PT:
 	stosq
 	add rax, 0x1000		; Add 4KiB

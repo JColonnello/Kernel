@@ -392,3 +392,4 @@ exc_string:
 	db '17 - AC', 0
 	db '18 - MC', 0
 	db '19 - XM', 0
+	db '20 - VE', 0

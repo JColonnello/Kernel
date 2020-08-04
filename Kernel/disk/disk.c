@@ -129,7 +129,7 @@ int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
 	return 0;
 }
 
-static int ata_write(void *disk_ptr, const void *buf, bmfs_uint64 len, bmfs_uint64 *write_len);
+//static int ata_write(void *disk_ptr, const void *buf, bmfs_uint64 len, bmfs_uint64 *write_len);
 
 struct BMFS bmfs;
 struct BMFSDisk disk;
