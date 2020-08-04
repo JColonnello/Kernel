@@ -2,7 +2,6 @@ BOOTLOADER_PATH=../Bootloader
 BMFS=$(BOOTLOADER_PATH)/BMFS/bmfs.bin
 BMFS_NEW=$(BOOTLOADER_PATH)/BMFS/bmfs
 MBR=$(BOOTLOADER_PATH)/Pure64/bmfs_mbr.sys
-MP=../Toolchain/ModulePacker/mp.bin
 PURE64=$(BOOTLOADER_PATH)/Pure64/pure64.sys
 OSIMAGENAME=x64BareBonesImage
 VMDK=$(OSIMAGENAME).vmdk

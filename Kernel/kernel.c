@@ -2,7 +2,6 @@
 #include "pid.h"
 #include <stdint.h>
 #include <lib.h>
-#include <moduleLoader.h>
 #include <console.h>
 #include <loader.h>
 #include <syslib.h>
