@@ -6,7 +6,7 @@ SOURCES=$(shell find src -name "*.c")
 SOURCES_ASM=$(shell find src -name "*.s")
 OBJECTS=$(SOURCES:%.c=$(BUILD_DIR)/%.c.o)
 OBJECTS_ASM=$(SOURCES_ASM:%.s=$(BUILD_DIR)/%.s.o)
-INC_DIRS = ./include ./include/pdclib
+INC_DIRS = ./include ./include/pdclib ../Common/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 DEFS = _PDCLIB_BUILD _PDCLIB_STATIC_DEFINE LACKS_SYS_TYPES_H \
 		LACKS_SYS_MMAN_H LACKS_FCNTL_H LACKS_UNISTD_H USE_LOCKS=0 \

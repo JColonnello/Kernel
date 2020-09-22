@@ -4,6 +4,7 @@
 #include <pid.h>
 #include <stdbool.h>
 #include <console.h>
+#include <common/processInfo.h>
 
 ProcessDescriptor descriptors[MAX_PID] = {0};
 bool inUse[MAX_PID] = {[0] = true};
@@ -112,4 +113,27 @@ void changeFocus(int tty)
     ProcessDescriptor *next = getByView(tty);
     changeTTY(tty);
     contextSwitch(next);
+}
+
+size_t listProcesses(struct ProcessInfo *buffer, size_t size)
+{
+    int count = 0;
+    size_t written = 0;
+    for(int i = 0; i < MAX_PID; i++)
+    {
+        if(!inUse[i])
+            continue;
+        if(size < written + sizeof(struct ProcessInfo))
+            break;
+
+        ProcessDescriptor *pd = &descriptors[i];
+        buffer[count] = (struct ProcessInfo)
+        {
+            .pid = pd->pid,
+            .stack = pd->stack
+        };
+        count++;
+        written += sizeof(struct ProcessInfo);
+    }
+    return written;
 }

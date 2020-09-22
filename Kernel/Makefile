@@ -7,7 +7,7 @@ SOURCES_ASM=$(shell find . -name "*.s")
 OBJECTS=$(SOURCES:%.c=$(BUILD_DIR)/%.c.o)
 OBJECTS_ASM=$(SOURCES_ASM:%.s=$(BUILD_DIR)/%.s.o)
 LOADERSRC=loader.asm
-INC_DIRS = ./include ../BMFS/include
+INC_DIRS = ./include ../BMFS/include ../Common/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 BMFS_LIB = ../BMFS/libbmfs.a
 DEP_FLAGS := -MMD -MP

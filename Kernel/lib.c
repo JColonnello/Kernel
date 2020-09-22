@@ -445,3 +445,8 @@ void *kcalloc(size_t nmemb, size_t size)
 		memset(mem, 0, nmemb * size);
 	return mem;
 }
+
+bool isKernelAddress(void *address)
+{
+	return (char*)address >= &__startOfUniverse;
+}

@@ -203,7 +203,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     return pid;
 }
 
-int exit(int status)
+void exit(int status)
 {
     ProcessDescriptor *pd = currentProcess();
     for(int i = 0; i < MAX_FD; i++)
@@ -236,6 +236,9 @@ size_t initFD(FileDescriptor **fdt, int tty)
 
 int getcpuinfo(char *id, char *model)
 {
+    if(isKernelAddress(id) || isKernelAddress(model))
+        return 0;
+
     int tmp[4];
     cpuVendor(tmp, 0);
     memcpy(id, &tmp[1], 4);
@@ -251,6 +254,14 @@ int getcpuinfo(char *id, char *model)
 }
 
 extern void temp(uint8_t *curr_temp, uint8_t *max_temp);
+
+size_t ps(struct ProcessInfo *buffer, size_t size)
+{
+    if(isKernelAddress(buffer))
+        return 0;
+
+    return listProcesses(buffer, size);
+}
 
 extern RegisterStatus lastRegisterStatus;
 
@@ -274,6 +285,7 @@ Syscall *funcTable[] =
     [401] = (Syscall*)date,
     [402] = (Syscall*)getcpuinfo,
     [403] = (Syscall*)dumpregs,
+    [404] = (Syscall*)ps,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #define PAGE_SIZE 0x1000
 #define PAGE_MASK (uintptr_t)~0xFFF
 
@@ -23,5 +24,6 @@ void outb(uint16_t port, uint8_t data);
 uint8_t inb(uint16_t port);
 void loadLayout(const char *file);
 void switchLayout();
+bool isKernelAddress(void *address);
 
 #endif

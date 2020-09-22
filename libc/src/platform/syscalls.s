@@ -20,6 +20,7 @@ syscallDef read, 0
 syscallDef getcpuinfo, 402
 syscallDef temp, 400
 syscallDef dumpregs, 403
+syscallDef ps, 404
 
 global _hlt
 _hlt:
