@@ -164,7 +164,8 @@ void viewflush(int id)
         outY++;
         bufY++;
     }
-    update_cursor(view.startX + view.lineCursor, outY-1);
+    if(id == focusedView)
+        update_cursor(view.startX + view.lineCursor, outY-1);
 }
 
 void viewLF(int id)

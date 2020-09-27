@@ -27,6 +27,5 @@ int createProcess(ProcessDescriptor **out);
 uintptr_t getKernelStack();
 bool isRunning(int pid);
 void exitProcess();
-void changeFocus(int tty);
 size_t listProcesses(struct ProcessInfo *buffer, size_t size);
 void contextSwitch(ProcessDescriptor *next);

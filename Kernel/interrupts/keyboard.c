@@ -360,7 +360,7 @@ void keyboardHandler(RegisterStatus *registers)
             if(code >= scanCodes[KEY_F1] && code <= scanCodes[KEY_F10])
             {
                 int view = code - scanCodes[KEY_F1];
-                changeFocus(view);
+                changeTTY(view);
             }
             // Ctrl + Alt + Supr
             else if(code == scanCodes[KEY_NUM_DEL] && (modStatus & MOD_FLAG_CTRL) && (modStatus & MOD_FLAG_ALT))

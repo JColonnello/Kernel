@@ -86,11 +86,6 @@ void exitProcess()
     }
 }
 
-void changeFocus(int tty)
-{
-    changeTTY(tty);
-}
-
 size_t listProcesses(struct ProcessInfo *buffer, size_t size)
 {
     int count = 0;

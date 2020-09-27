@@ -21,14 +21,14 @@ int main()
 	{
 		if(!isRunning(pidShell))
 		{
-			changeFocus(1);
+			changeTTY(1);
 			currentProcess()->tty = 1;
 			pidShell = execve("userland/shell.bin", NULL, NULL);
 			wait();
 		}
 		if(!isRunning(pidCal))
 		{
-			changeFocus(0);
+			changeTTY(0);
 			currentProcess()->tty = 0;
 			pidCal = execve("userland/shell.bin", NULL, NULL);
 			wait();
