@@ -11,6 +11,7 @@ extern getKernelStack
 extern freeKernelStack
 extern execve
 extern dropTable
+extern Scheduler_SwitchNext
 
 %macro pushContext 0
 	push rsp
@@ -110,25 +111,13 @@ _switchPML4:
     ret
 
 _dropAndLeave:
-	push rdi
-	push rsi
 	call getKernelStack
-	pop rsi
-	pop rdi
 	mov rbp, rax
 	mov rsp, rax
-	push rdi
-	push rsi
 	call dropTable
-	pop rsi
-	pop rdi
-	mov r12, rdi
-	mov r13, rsi
 	mov rdi, rbp
 	call freeKernelStack
-	mov rdi, r12
-	mov rsi, r13
-	jmp _abandon
+	call Scheduler_SwitchNext
 
 ; RDI = pml4
 ; RSI = pointer to new rsp

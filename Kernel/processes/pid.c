@@ -67,12 +67,13 @@ void contextSwitch(ProcessDescriptor *next)
     _switch(next->pml4, &next->stack, &curr->stack);
 }
 
-extern void _dropAndLeave(uintptr_t pml4, uintptr_t *newStack);
+extern void _dropAndLeave();
 
 void exitProcess()
 {
     ProcessDescriptor *pd = currentProcess(), *parent = pd->parent;
     //Drop PML4
+    _cli();
     kfree(pd->fd);
     inUse[pd->pid] = false;
     if(parent == NULL)
@@ -82,7 +83,7 @@ void exitProcess()
     }
     else
     {
-        Scheduler_SwitchNext();
+        _dropAndLeave();
     }
 }
 

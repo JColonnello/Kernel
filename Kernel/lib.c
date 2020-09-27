@@ -7,9 +7,10 @@
 #include <pid.h>
 
 #define LOOPBACK 0x1FE
+#define ONE ((uint64_t)1)
 
 //Bit field to map 1GB of RAM
-static uint8_t physReservedPages[((uint64_t)1<<30) / PAGE_SIZE / 8];
+static uint64_t physReservedPages[(ONE<<30) / PAGE_SIZE / 64];
 static size_t firstFreePage;
 static size_t currVirtualPage = 0;
 static size_t reservedMemCount = 0;
@@ -68,14 +69,14 @@ static uintptr_t reservePhysPage()
 {
 	const size_t pageFieldSize = sizeof(physReservedPages);
 	int pos = 0, i;
-	for(i = 0; physReservedPages[i] == 0xFF && i < pageFieldSize; i++, pos += 8) ;
+	for(i = 0; physReservedPages[i] == -ONE && i < pageFieldSize; i++, pos += 64) ;
 	if(i == pageFieldSize)
 		return -1;
 
-	uint8_t chunk = physReservedPages[i];
+	uint64_t chunk = physReservedPages[i];
 	int off;
 	for(off = 0; chunk & 1; chunk >>= 1, off++, pos++) ;
-	physReservedPages[i] |= 1 << off;
+	physReservedPages[i] |= ONE << off;
 
 	reservedPagesCount++;
 	return pos << 12;
@@ -83,12 +84,16 @@ static uintptr_t reservePhysPage()
 
 static void freePhysPage(size_t idx)
 {
-	if(idx / 8 >= sizeof(physReservedPages))
+	size_t chunk = idx / 64;
+	if(chunk >= sizeof(physReservedPages))
 		return;
 
-	if(physReservedPages[idx / 8] & (1 << (idx % 8)))
+	size_t off = idx % 64;
+	if(physReservedPages[chunk] & (ONE << (off)))
+	{
 		reservedPagesCount--;
-	physReservedPages[idx / 8] &= ~(1 << (idx % 8));
+		physReservedPages[chunk] &= ~(ONE << (off));
+	}
 }
 
 size_t getReservedPagesCount() { return reservedPagesCount; }
@@ -97,11 +102,11 @@ size_t getReservedMemoryCount() { return reservedMemCount; }
 void libInit()
 {
 	firstFreePage = (&__endOfKernel - &__startOfUniverse) / PAGE_SIZE + 16 + 1;
-	memset(physReservedPages, 0xFF, firstFreePage / 8);
-	uint8_t last = 0;
-	for(int i = 0; i < firstFreePage % 8; i++)
+	memset(physReservedPages, 0xFF, firstFreePage / 64 * 8);
+	uint64_t last = 0;
+	for(int i = 0; i < firstFreePage % 64; i++)
 		last = last << 1 | 1;
-	physReservedPages[firstFreePage / 8] = last;
+	physReservedPages[firstFreePage / 64] = last;
 	currVirtualPage = firstFreePage + ((uintptr_t)&__startOfUniverse >> 12);
 }
 

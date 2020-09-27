@@ -13,13 +13,13 @@ section .text
 ; @return None
 ;=============================================================================
 ata_lba_read:
-    cli
     pushfq
     push rax
     push rbx
     push rcx
     push rdx
     push rdi
+    cli
     and rax, 0x0FFFFFFF
     movzx rcx, byte dl
     mov eax, esi
@@ -74,7 +74,6 @@ ata_lba_read:
     pop rbx
     pop rax
     popfq
-    sti
     ret
 
 ;=============================================================================

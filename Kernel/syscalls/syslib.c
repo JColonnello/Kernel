@@ -86,10 +86,10 @@ static uintptr_t brk(uintptr_t addr)
     
     if(addr > pd->prgmBreak)
     {
-        size_t pages = addr / PAGE_SIZE - pd->prgmBreak / PAGE_SIZE;
+        size_t pages = (addr-1) / PAGE_SIZE - (pd->prgmBreak-1) / PAGE_SIZE;
         if(pages > 0)
         {
-            void *begin = (void*)(pd->prgmBreak & PAGE_MASK);
+            void *begin = (void*)((pd->prgmBreak-1 + PAGE_SIZE) & PAGE_MASK);
             kmap(&begin, NULL, NULL, pages);
         }
         pd->prgmBreak = addr;
@@ -97,10 +97,10 @@ static uintptr_t brk(uintptr_t addr)
     }
     else
     {
-        size_t pages = pd->prgmBreak / PAGE_SIZE - addr / PAGE_SIZE;
+        size_t pages = (pd->prgmBreak-1) / PAGE_SIZE - (addr-1) / PAGE_SIZE;
         if(pages > 0)
         {
-            void *begin = (void*)((addr + PAGE_SIZE) & PAGE_MASK);
+            void *begin = (void*)((addr-1 + PAGE_SIZE) & PAGE_MASK);
             kunmap(begin, pages);
         }
         pd->prgmBreak = addr;
