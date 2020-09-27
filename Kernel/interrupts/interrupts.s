@@ -149,14 +149,13 @@ irqGate:
 	jnz .call
 	mov rax, defaultInterrupt
 .call:	
-	push rax
-	call [rsp]
-	add rsp, 8
+	call rax
 	; signal pic EOI (End of Interrupt)
 	mov al, 20h
 	out 20h, al
 	popState
 	sub rsp, 8	; Fix correction
+	sti
 	iretq
 
 %assign i 0
@@ -267,6 +266,7 @@ defaultInterrupt:
 	ret
 
 defaultException:
+	cli
 	push rbx
 	mov rbx, rdi
 	call ncNewline
@@ -294,11 +294,6 @@ defaultException:
 	call exit
 	pop rbx
 	ret
-
-_hltForever:
-	cli
-	hlt
-	jmp _hltForever
 
 _cli:
 	cli

@@ -5,12 +5,12 @@
 #include <stdbool.h>
 #include <console.h>
 #include <common/processInfo.h>
+#include <scheduler.h>
 
-ProcessDescriptor descriptors[MAX_PID] = {0};
-bool inUse[MAX_PID] = {[0] = true};
-unsigned byViews[MAX_VIEWS];
+static ProcessDescriptor descriptors[MAX_PID] = {0};
+static bool inUse[MAX_PID] = {[0] = true};
 
-int currentPID = 0;
+static int currentPID = 0;
 
 ProcessDescriptor *currentProcess()
 {
@@ -35,6 +35,8 @@ int createProcess(ProcessDescriptor **out)
 
     inUse[i] = true;
     *out = pd;
+    Scheduler_AddProcess(pd);
+
     return pd->pid;
 }
 
@@ -43,14 +45,6 @@ bool isRunning(int pid)
     if(pid >= MAX_PID || pid < 0)
         return false;
     return inUse[pid];
-}
-
-ProcessDescriptor *getByView(int view)
-{
-    if(view >= MAX_VIEWS)
-        return NULL;
-    int pid = byViews[view];
-    return &descriptors[pid];
 }
 
 uintptr_t getKernelStack()
@@ -88,31 +82,13 @@ void exitProcess()
     }
     else
     {
-        byViews[pd->tty] = parent->pid;
-        currentPID = parent->pid;
-        _dropAndLeave(parent->pml4, &parent->stack);
+        Scheduler_SwitchNext();
     }
-}
-
-void giveFocus(int pid)
-{
-    if(pid >= MAX_PID || pid < 0)
-        return;
-
-    ProcessDescriptor *curr = currentProcess(), *next = &descriptors[pid];
-
-    if(next->parent != curr)
-        return;
-
-    byViews[next->tty] = next->pid;
-    contextSwitch(next);
 }
 
 void changeFocus(int tty)
 {
-    ProcessDescriptor *next = getByView(tty);
     changeTTY(tty);
-    contextSwitch(next);
 }
 
 size_t listProcesses(struct ProcessInfo *buffer, size_t size)

@@ -9,6 +9,7 @@
 #include <disk.h>
 #include "time.h"
 #include "types.h"
+#include <scheduler.h>
 
 #define MAX_FD 128
 typedef int (Syscall)(void);
@@ -212,9 +213,9 @@ void exit(int status)
     exitProcess();
 }
 
-void wait(int pid)
+void wait()
 {
-    giveFocus(pid);
+    Scheduler_SwitchNext();
 }
 
 static int getpid()

@@ -5,6 +5,7 @@
 #include <syslib.h>
 #include "keyboard.h"
 #include "time.h"
+#include <scheduler.h>
 
 #define endOfArray(x) (sizeof(x)/ sizeof (*(x)) - 1)
 
@@ -31,12 +32,12 @@ void setupIDTEntry(uint8_t entry, const void *handler)
 void load_idt() {
     setupIDTHandlers();
 
-    // setupIDTEntry(0x20, timer_handler);
+    setupIDTEntry(0x20, Scheduler_SwitchNext);
     setupIDTEntry(0x21, keyboardHandler);
     setupIDTEntry (0x80, syscallHandler);
     // setupIDTEntry (0x00, (uint64_t)&_exception0Handler);
 
-	picMasterMask(0xFD); 
+	picMasterMask(0xFC); 
 	picSlaveMask(0xFF);
   
 	_sti();

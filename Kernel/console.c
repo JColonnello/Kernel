@@ -5,6 +5,7 @@
 #include <lib.h>
 #include <naiveConsole.h>
 #include <stdbool.h>
+#include <pid.h>
 
 typedef enum
 {
@@ -49,6 +50,7 @@ typedef struct
     int startX;
     int height;
     int width;
+    bool flushInput;
     CharEntry *lines;
     size_t lineEnd;
     size_t lineCount;
@@ -235,8 +237,6 @@ int viewWrite(int id, const char *text, size_t n)
     return n;
 }
 
-static bool flushInput = false;
-
 void inputBufferWrite(char c)
 {
     ConsoleView *view = &views[focusedView];
@@ -266,7 +266,7 @@ void inputBufferWrite(char c)
         if(c == '\n')
         {
             canDelete=0;
-            flushInput = true;
+            view->flushInput = true;
         }
         viewWrite(focusedView, &c, 1);
     }
@@ -274,7 +274,7 @@ void inputBufferWrite(char c)
 
 int inputBufferRead(int id, char *dest, size_t count)
 {
-    ConsoleView *view = &views[focusedView];
+    ConsoleView *view = &views[currentProcess()->tty];
     int i;
     
     if(view->input == NULL)
@@ -282,17 +282,17 @@ int inputBufferRead(int id, char *dest, size_t count)
     bool done = false;
     for(i = 0; i < count && !done; i++)
     {
-        while(view->inputCount < (count - i) && view->inputCount < view->maxInput && !flushInput)
-            _hlt();
+        while(view->inputCount < (count - i) && view->inputCount < view->maxInput && !view->flushInput)
+            wait();
         dest[i] = view->input[view->inputStart++];
         if(view->inputStart == view->maxInput)
             view->inputStart = 0;
         view->inputCount--;
 
-        if(flushInput && view->inputCount == 0)
+        if(view->flushInput && view->inputCount == 0)
         {
             done = true;
-            flushInput = false;
+            view->flushInput = false;
         }
     }
     return i;

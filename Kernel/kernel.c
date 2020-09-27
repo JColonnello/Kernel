@@ -24,14 +24,14 @@ int main()
 			changeFocus(1);
 			currentProcess()->tty = 1;
 			pidShell = execve("userland/shell.bin", NULL, NULL);
-			wait(pidShell);
+			wait();
 		}
 		if(!isRunning(pidCal))
 		{
 			changeFocus(0);
 			currentProcess()->tty = 0;
-			pidCal = execve("userland/calc.bin", NULL, NULL);
-			wait(pidCal);
+			pidCal = execve("userland/shell.bin", NULL, NULL);
+			wait();
 		}
 	}
 	_halt();

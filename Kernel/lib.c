@@ -8,8 +8,8 @@
 
 #define LOOPBACK 0x1FE
 
-//Bit field to map 4GB of RAM
-static uint8_t physReservedPages[((uint64_t)4<<30) / PAGE_SIZE / 8];
+//Bit field to map 1GB of RAM
+static uint8_t physReservedPages[((uint64_t)1<<30) / PAGE_SIZE / 8];
 static size_t firstFreePage;
 static size_t currVirtualPage = 0;
 static size_t reservedMemCount = 0;
@@ -77,8 +77,8 @@ static uintptr_t reservePhysPage()
 	for(off = 0; chunk & 1; chunk >>= 1, off++, pos++) ;
 	physReservedPages[i] |= 1 << off;
 
-        reservedPagesCount++;
-        return pos << 12;
+	reservedPagesCount++;
+	return pos << 12;
 }
 
 static void freePhysPage(size_t idx)

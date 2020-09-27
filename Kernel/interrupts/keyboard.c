@@ -360,8 +360,6 @@ void keyboardHandler(RegisterStatus *registers)
             if(code >= scanCodes[KEY_F1] && code <= scanCodes[KEY_F10])
             {
                 int view = code - scanCodes[KEY_F1];
-                //Clean interrupt before switch
-                outb(0x20, 0x20);
                 changeFocus(view);
             }
             // Ctrl + Alt + Supr

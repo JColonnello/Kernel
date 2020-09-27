@@ -30,6 +30,7 @@ extern dropTable
 	push rbx
 	push rax
     pushfq
+	;space for fxsave and rsp before alignment
 	lea rax, [rsp - 512 - 8]
 	and rax, ~0xF
 	fxsave [rax]
@@ -142,11 +143,13 @@ _abandon:
 	or rdi, 0x8
     mov cr3, rdi
 	mov rsp, [rsi]
+	sti
 	ret ; Jump to other process
 
 _resume:
 	; RIP has alredy been pop'd
 	popContext
+	sti
 	ret
 
 temp:
