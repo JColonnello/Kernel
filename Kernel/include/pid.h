@@ -17,6 +17,8 @@ struct ProcessDescriptor
     uintptr_t stack;
     FileDescriptor *fd;
     size_t fdtSize;
+    char name[64];
+    bool exitMark;
     ProcessDescriptor *parent;
 };
 
@@ -29,3 +31,4 @@ bool isRunning(int pid);
 void exitProcess();
 size_t listProcesses(struct ProcessInfo *buffer, size_t size);
 void contextSwitch(ProcessDescriptor *next);
+void dropProcess(int pid);

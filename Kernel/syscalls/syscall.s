@@ -12,6 +12,7 @@ extern freeKernelStack
 extern execve
 extern dropTable
 extern Scheduler_SwitchNext
+extern checkProcessSignals
 
 %macro pushContext 0
 	push rsp
@@ -132,6 +133,7 @@ _abandon:
 	or rdi, 0x8
     mov cr3, rdi
 	mov rsp, [rsi]
+	call checkProcessSignals
 	sti
 	ret ; Jump to other process
 

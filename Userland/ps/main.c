@@ -13,7 +13,8 @@ void main()
 	while((uintptr_t)current < (uintptr_t)list + size)
 	{
 		printf("Process %u:\n", current->pid);
-		printf("\tStack: 0x%Xl\n", current->stack);
+		printf("\tName: %s\n", current->name);
+		printf("\tStack: 0x%lX\n", current->stack);
 		current++;
 	}
 }

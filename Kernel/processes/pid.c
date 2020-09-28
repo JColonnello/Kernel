@@ -27,6 +27,7 @@ int createProcess(ProcessDescriptor **out)
         return -1;
 
     ProcessDescriptor *curr = currentProcess(), *pd = &descriptors[i];
+    *pd = (ProcessDescriptor) {0};
     pd->pid = i;
     pd->tty = curr->tty;
     pd->pml4 = createPML4();
@@ -87,6 +88,18 @@ void exitProcess()
     }
 }
 
+void dropProcess(int pid)
+{
+    descriptors[pid].exitMark = true;
+}
+
+void checkProcessSignals()
+{
+    ProcessDescriptor *pd = currentProcess();
+    if(pd->exitMark)
+        exitProcess();
+}
+
 size_t listProcesses(struct ProcessInfo *buffer, size_t size)
 {
     int count = 0;
@@ -104,6 +117,8 @@ size_t listProcesses(struct ProcessInfo *buffer, size_t size)
             .pid = pd->pid,
             .stack = pd->stack
         };
+        for (int j = 0; j < sizeof(buffer->name) && pd->name[j]; j++)
+            buffer[count].name[j] = pd->name[j];
         count++;
         written += sizeof(struct ProcessInfo);
     }

@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         char *params[] = {param, NULL};
         int pid = execve(path, params, NULL);
         if(pid > 0)
-            wait(pid);
+            ;//yield(pid);
         else
             fprintf(stderr, "Command not found\n");
     }

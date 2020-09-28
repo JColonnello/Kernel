@@ -11,7 +11,7 @@
 
 extern int fork( void );
 extern int execve( const char * filename, char * const argv[], char * const envp[] );
-extern int wait( int pid );
+extern int yield();
 
 /*
 int system( const char * string )

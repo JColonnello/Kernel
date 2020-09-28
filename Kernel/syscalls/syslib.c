@@ -116,7 +116,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     ProcessDescriptor *pdnew, *curr = currentProcess();
 
     size_t pathlen = 0;
-    while(pathname[pathlen] != 0)
+    while(pathname[pathlen] != 0 && pathlen <= 255)
         pathlen++;
     if(pathlen > 255)
         return -1;
@@ -129,6 +129,15 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     if(pid < 0)
         return -1;
     
+    {
+        int i = 0;
+        while(pathname[i] != '/' && i < pathlen)
+            i++;
+        if(i == pathlen)
+            i = 0;
+        memcpy(pdnew->name, &pathname[i+1], pathlen-i);
+    }
+
     size_t argLen = 2;
     char defkargs[2] = {0};
     char *kargs = defkargs;
@@ -213,7 +222,7 @@ void exit(int status)
     exitProcess();
 }
 
-void wait()
+void yield()
 {
     Scheduler_SwitchNext();
 }
@@ -271,6 +280,24 @@ void dumpregs(RegisterStatus *info)
     *info = lastRegisterStatus;
 }
 
+static void memuse(size_t *bytesPhysical, size_t *bytesVirtual)
+{
+    if(isKernelAddress(bytesPhysical) || isKernelAddress(bytesVirtual))
+        return;
+
+    *bytesPhysical = getReservedPagesCount() * PAGE_SIZE;
+    *bytesVirtual = getReservedMemoryCount();
+}
+
+static int kill(int pid)
+{
+    if(!isRunning(pid))
+        return -1;
+
+    dropProcess(pid);
+    return 0;
+}
+
 Syscall *funcTable[] = 
 {
     [0] = (Syscall*)read,
@@ -281,12 +308,14 @@ Syscall *funcTable[] =
     [39] = (Syscall*)getpid,
     [59] = (Syscall*)_execve,
     [60] = (Syscall*)exit,
-    [64] = (Syscall*)wait,
+    [64] = (Syscall*)yield,
     [400] = (Syscall*)temp,
     [401] = (Syscall*)date,
     [402] = (Syscall*)getcpuinfo,
     [403] = (Syscall*)dumpregs,
     [404] = (Syscall*)ps,
+    [405] = (Syscall*)memuse,
+    [62] = (Syscall*)kill,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

@@ -14,13 +14,15 @@ syscallDef unlink, 87
 syscallDef date, 401
 syscallDef _brk, 12
 syscallDef execve, 59
-syscallDef wait, 64
+syscallDef yield, 64
 syscallDef getpid, 39
 syscallDef read, 0
 syscallDef getcpuinfo, 402
 syscallDef temp, 400
 syscallDef dumpregs, 403
 syscallDef ps, 404
+syscallDef memuse, 405
+syscallDef kill, 62
 
 global _hlt
 _hlt:

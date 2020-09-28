@@ -453,5 +453,5 @@ void *kcalloc(size_t nmemb, size_t size)
 
 bool isKernelAddress(void *address)
 {
-	return (char*)address >= &__startOfUniverse;
+	return (uintptr_t)address>>39 == LOOPBACK || (char*)address >= &__startOfUniverse;
 }
