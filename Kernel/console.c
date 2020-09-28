@@ -273,9 +273,12 @@ void inputBufferWrite(char c)
 
 int inputBufferRead(int id, char *dest, size_t count)
 {
-    ConsoleView *view = &views[currentProcess()->tty];
+    ProcessDescriptor *pd = currentProcess();
+    ConsoleView *view = &views[pd->tty];
     int i;
     
+    if(!pd->foreground)
+        return 0;
     if(view->input == NULL)
         return 0;
     bool done = false;

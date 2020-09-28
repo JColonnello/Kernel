@@ -10,6 +10,7 @@
 #include "time.h"
 #include "types.h"
 #include <scheduler.h>
+#include <common/processInfo.h>
 
 #define MAX_FD 128
 typedef int (Syscall)(void);
@@ -298,6 +299,16 @@ static int kill(int pid)
     return 0;
 }
 
+static int ispidrun(int pid)
+{
+    return isRunning(pid);
+}
+
+static enum PdJobStatus setjobstatus(int pid, enum PdJobStatus status)
+{
+    return setJobStatus(pid, status);
+}
+
 Syscall *funcTable[] = 
 {
     [0] = (Syscall*)read,
@@ -316,6 +327,8 @@ Syscall *funcTable[] =
     [404] = (Syscall*)ps,
     [405] = (Syscall*)memuse,
     [62] = (Syscall*)kill,
+    [406] = (Syscall*)ispidrun,
+    [407] = (Syscall*)setjobstatus,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

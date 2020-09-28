@@ -23,6 +23,8 @@ syscallDef dumpregs, 403
 syscallDef ps, 404
 syscallDef memuse, 405
 syscallDef kill, 62
+syscallDef ispidrun, 406
+syscallDef setjobstatus, 407
 
 global _hlt
 _hlt:

@@ -33,6 +33,7 @@ int createProcess(ProcessDescriptor **out)
     pd->pml4 = createPML4();
     pd->fdtSize = initFD(&pd->fd, pd->tty);
     pd->parent = curr;
+    pd->foreground = true;
 
     inUse[i] = true;
     *out = pd;
@@ -90,6 +91,8 @@ void exitProcess()
 
 void dropProcess(int pid)
 {
+    if(pid >= MAX_PID || pid < 0)
+        return;
     descriptors[pid].exitMark = true;
 }
 
@@ -123,4 +126,26 @@ size_t listProcesses(struct ProcessInfo *buffer, size_t size)
         written += sizeof(struct ProcessInfo);
     }
     return written;
+}
+
+enum PdJobStatus setJobStatus(int pid, enum PdJobStatus status)
+{
+    if(pid >= MAX_PID || pid < 0)
+        return JOB_NONE;
+
+    ProcessDescriptor *pd = &descriptors[pid];
+    switch (status) 
+    {
+        case JOB_NONE:
+            break;
+        case JOB_FOREGROUND:
+            pd->foreground = true;
+            break;
+        case JOB_BACKGROUND:
+            pd->foreground = false;
+            break;
+        default:
+            return JOB_NONE;
+    }
+    return pd->foreground ? JOB_FOREGROUND : JOB_BACKGROUND;
 }

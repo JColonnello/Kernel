@@ -19,6 +19,7 @@ struct ProcessDescriptor
     size_t fdtSize;
     char name[64];
     bool exitMark;
+    bool foreground;
     ProcessDescriptor *parent;
 };
 
@@ -32,3 +33,4 @@ void exitProcess();
 size_t listProcesses(struct ProcessInfo *buffer, size_t size);
 void contextSwitch(ProcessDescriptor *next);
 void dropProcess(int pid);
+enum PdJobStatus setJobStatus(int pid, enum PdJobStatus status);
