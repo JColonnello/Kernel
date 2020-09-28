@@ -60,7 +60,8 @@ char *realpath(char *path, char *resolved)
     {
         resolved = malloc(strlen(path)+1);
     }
-    strcpy(resolved, path);
+    if(resolved != NULL)
+        strcpy(resolved, path);
     return resolved;
 }
 

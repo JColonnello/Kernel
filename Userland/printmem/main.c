@@ -8,4 +8,5 @@ int main(int argc, char *argv[])
         return 1;
     sscanf(argv[0], "%lx", &dir);
     printf("Memory at 0x%lx = 0x%016lx\n", dir, *(uintptr_t*)dir);
+    return 0;
 }

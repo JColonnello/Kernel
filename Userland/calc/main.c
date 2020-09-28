@@ -6,17 +6,6 @@
 #include <stdint.h>
 #include <limits.h>
 
-bool isNaN(double d)
-{
-    union
-    {
-        double d;
-        uint64_t u;
-    } conv;
-    conv.d = d;
-    printf("doki: %p", conv.u);
-}
-
 int doOperation(double a, double b, char op, double *result)
 {
     switch(op)
@@ -31,7 +20,7 @@ int doOperation(double a, double b, char op, double *result)
             *result = a * b;
             break;
         case '/':
-            if(b == .0)
+            if(b == 0.0)
             {
                 printf("Divition by zero\n");
                 return -5;
@@ -49,7 +38,7 @@ int compute(const char *expr, int len, double *result)
 {
     int i = 0;
 
-    while(isspace(expr[i]) && i < len) i++;
+    while(i < len && isspace(expr[i])) i++;
     if(i >= len)
     {
         printf("Missing expression\n");
@@ -87,7 +76,7 @@ int compute(const char *expr, int len, double *result)
         }
         if(neg)
             *result = -*result;
-        while(isspace(expr[i]) && i < len) i++;
+        while(i < len && isspace(expr[i])) i++;
         return i;
     }
     else if(expr[i] == '(')
@@ -111,7 +100,7 @@ int compute(const char *expr, int len, double *result)
             printf("Invalid expresion\n");
             return -3;
         }
-        while(isspace(expr[i]) && i < len) i++;
+        while(i < len && isspace(expr[i])) i++;
         return i;
     }
     printf("Invalid symbol: %c\n", expr[i]);

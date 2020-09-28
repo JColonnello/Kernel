@@ -16,14 +16,14 @@ struct Queue
 
 Queue *Queue_Create(int capacity, size_t elemSize)
 {
-	Queue *queue = kmalloc(sizeof(struct Queue));
 
 	if(capacity < 0)
 	{
 		//printf("Negative capacity for Queue\n");
 		return NULL;
 	}
-	else if(capacity == 0)
+	Queue *queue = kmalloc(sizeof(struct Queue));
+	if(capacity == 0)
 	{
 		capacity = DEFAULT_CAPACITY;
 		queue->expandible = true;
@@ -79,7 +79,7 @@ void Queue_Enqueue(Queue *queue, void *elem)
 
 bool Queue_Dequeue(Queue *queue, void *elem)
 {
-	if(queue->count <= 0)
+	if(queue->count == 0)
 		return false;
 
 	memcpy(elem, queue->data + queue->start * queue->elemSize, queue->elemSize);
@@ -92,7 +92,7 @@ bool Queue_Dequeue(Queue *queue, void *elem)
 
 bool Queue_Peek(Queue *queue, void *elem)
 {
-	if(queue->count <= 0) 
+	if(queue->count == 0) 
 		return false;
 
 	memcpy(elem, queue->data + queue->start * queue->elemSize, queue->elemSize);
@@ -106,7 +106,7 @@ int Queue_Count(Queue *queue)
 
 void Queue_ToArray(Queue *queue, void *array)
 {
-	if(queue->count <= 0) 
+	if(queue->count == 0) 
 		return;
 	int size = (queue->end - queue->start) * queue->elemSize;
 	if(size > 0)

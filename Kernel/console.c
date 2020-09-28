@@ -119,14 +119,14 @@ int createConsoleView(int startY, int startX, int height, int width)
     {
         if(startY-1 >= 0)
             (*video)[startY-1][startX-1].symbol = (char)201;
-        if(startY+height < 80)
+        if(startY+height < 25)
             (*video)[startY+height][startX-1].symbol = (char)200;
     }
     if(startX+width < 80)
     {
         if(startY-1 >= 0)
             (*video)[startY-1][startX+width].symbol = (char)187;
-        if(startY+height+1 < 80)
+        if(startY+height < 25)
             (*video)[startY+height][startX+width].symbol = (char)188;
     }
     
@@ -148,7 +148,7 @@ void update_cursor(int x, int y)
 void viewflush(int id)
 {
     ConsoleView view = views[id];
-    CharEntry (*buf)[view.maxLines][view.width] = (void*)view.lines;
+    const CharEntry (*buf)[view.maxLines][view.width] = (void*)view.lines;
 
     int lines = (view.height < view.lineCount) ? view.height : view.lineCount;
     int outY = view.startY, bufY = view.lineEnd - lines + 1;
@@ -221,8 +221,6 @@ int viewWrite(int id, const char *text, size_t n)
                                 view->lineEnd--;
                             view->lineCount--;
                         }
-                        else
-                            view->lineCursor = 0;
                     }
                     else
                         view->lineCursor--;
@@ -310,7 +308,7 @@ void changeTTY(int id)
 
 static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
-static char buffer[64] = { '0' };
+static char buffer[64];
 
 void ncWrite(const char *buf, size_t n)
 {

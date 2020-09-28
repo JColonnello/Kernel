@@ -10,10 +10,10 @@ int main()
     dumpregs(&registers);
     uint64_t *regs = (void*)&registers;
 
-    printf(" IP = %016lx\n\n", registers.rip);
+    printf(" IP = %016lX\n\n", registers.rip);
     for(int i = 0; i < 16; i++)
     {
-        printf("%3s=%016lx", names[i], regs[i]);
+        printf("%3s=%016lX", names[i], regs[i]);
     }
     printf("\n");
 

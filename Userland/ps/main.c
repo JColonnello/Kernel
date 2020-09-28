@@ -9,7 +9,6 @@ void main()
 	struct ProcessInfo *list = (void*)buffer, *current = list;
     size_t size = ps(list, sizeof(buffer));
 
-	printf("%u\n", size);
 	while((uintptr_t)current < (uintptr_t)list + size)
 	{
 		printf("Process %u:\n", current->pid);

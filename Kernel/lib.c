@@ -67,9 +67,9 @@ void * memcpy(void * destination, const void * source, size_t length)
 
 static uintptr_t reservePhysPage()
 {
-	const size_t pageFieldSize = sizeof(physReservedPages);
+	const size_t pageFieldSize = sizeof(physReservedPages) / sizeof(*physReservedPages);
 	int pos = 0, i;
-	for(i = 0; physReservedPages[i] == -ONE && i < pageFieldSize; i++, pos += 64) ;
+	for(i = 0; i < pageFieldSize && physReservedPages[i] == -ONE; i++, pos += 64) ;
 	if(i == pageFieldSize)
 		return -1;
 
@@ -85,7 +85,7 @@ static uintptr_t reservePhysPage()
 static void freePhysPage(size_t idx)
 {
 	size_t chunk = idx / 64;
-	if(chunk >= sizeof(physReservedPages))
+	if(chunk >= sizeof(physReservedPages) / sizeof(*physReservedPages))
 		return;
 
 	size_t off = idx % 64;

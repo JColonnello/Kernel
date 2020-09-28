@@ -117,7 +117,7 @@ size_t listProcesses(struct ProcessInfo *buffer, size_t size)
             .pid = pd->pid,
             .stack = pd->stack
         };
-        for (int j = 0; j < sizeof(buffer->name) && pd->name[j]; j++)
+        for (int j = 0; j < sizeof(buffer[count].name) && pd->name[j]; j++)
             buffer[count].name[j] = pd->name[j];
         count++;
         written += sizeof(struct ProcessInfo);

@@ -88,7 +88,7 @@
 #define _PDCLIB_TWOS_COMPLEMENT 1
 
 /* Calculation of a minimum value from a given maximum for two's complement.  */
-#define _PDCLIB_MIN_CALC( max ) ( ( - max ) - 1 )
+#define _PDCLIB_MIN_CALC( max ) ( ( - (max) ) - 1 )
 
 /* Now, introducting the various predefines to the _PDCLIB_* namespace, so    */
 /* the rest of PDCLib can work with that and adapting to a different compiler */

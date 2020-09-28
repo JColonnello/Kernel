@@ -1,5 +1,4 @@
-#ifndef LIB_H
-#define LIB_H
+#pragma once
 
 #include <stdint.h>
 #include <stddef.h>
@@ -25,5 +24,6 @@ uint8_t inb(uint16_t port);
 void loadLayout(const char *file);
 void switchLayout();
 bool isKernelAddress(void *address);
-
-#endif
+void _cli(void);
+void _sti(void);
+void _hlt(void);

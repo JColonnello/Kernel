@@ -116,7 +116,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     ProcessDescriptor *pdnew, *curr = currentProcess();
 
     size_t pathlen = 0;
-    while(pathname[pathlen] != 0 && pathlen <= 255)
+    while(pathlen <= 255 && pathname[pathlen] != 0)
         pathlen++;
     if(pathlen > 255)
         return -1;
@@ -131,7 +131,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
     
     {
         int i = 0;
-        while(pathname[i] != '/' && i < pathlen)
+        while(i < pathlen && pathname[i] != '/')
             i++;
         if(i == pathlen)
             i = 0;
