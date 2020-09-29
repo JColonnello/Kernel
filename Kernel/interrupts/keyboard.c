@@ -151,7 +151,7 @@ static u8 scanCodes[256] =
 
 
 
-const char charMapOrig[256][8] = {
+static const char charMapOrig[256][8] = {
 /*                                                         alt
  * scan                       cntrl          alt    alt   cntrl
  * code  base   shift  cntrl  shift   alt   shift  cntrl  shift    spcl flgs
