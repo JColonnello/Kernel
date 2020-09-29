@@ -25,3 +25,13 @@ Author: Joaquín Colonnello
 x64BareBones:
 Author: Rodrigo Rearden (RowDaBoat)
 Collaborator: Augusto Nizzo McIntosh
+
+Basic usage:
+
+F1-F12: Change TTY
+Ctrl-Alt-Supr: Store registers value
+Alt-Space: Change keyboard layout (US / Latin American)
+Esc: Erase whole line
+Backspace: Erase characters
+
+"help" command list available programs
