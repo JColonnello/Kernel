@@ -24,15 +24,14 @@ int main()
 			changeTTY(1);
 			currentProcess()->tty = 1;
 			pidShell = execve("userland/shell.bin", NULL, NULL);
-			yield();
 		}
 		if(!isRunning(pidCal))
 		{
 			changeTTY(0);
 			currentProcess()->tty = 0;
 			pidCal = execve("userland/shell.bin", NULL, NULL);
-			yield();
 		}
+		_hlt();
 	}
 	_halt();
 	return 0;
