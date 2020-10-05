@@ -73,12 +73,15 @@ syscallHandler:
     mov rax, [rax]
     test rax, rax
     jz .ret
+	sub rsp, 8	; Align
     call rax
+	add rsp, 8
 .ret:
     ret
 
 ; Change to kernel stack before rutine
 _execve:
+	sub rsp, 8	; Align
     push rbp
 	push rdi
 	push rsi
@@ -105,6 +108,7 @@ _execve:
 	call freeKernelStack
 	pop rax
     pop rbp
+	add rsp, 8
     ret
 
 ; Only usable from kernel stack
@@ -114,13 +118,17 @@ _switchPML4:
     ret
 
 _dropAndLeave:
+	sub rsp, 8	; Align
 	call getKernelStack
+	add rsp,8
 	mov rbp, rax
 	mov rsp, rax
 	call dropTable
 	mov rdi, rbp
 	call freeKernelStack
 	call Scheduler_SwitchNext
+	cli	; Shouldn't return. Trap for future debugging
+	hlt
 
 ; RDI = pml4
 ; RSI = pointer to new rsp

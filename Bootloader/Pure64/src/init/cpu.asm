@@ -78,14 +78,21 @@ init_cpu:
 	btr rax, 2			; Clear Emulation (Bit 2)
 	mov cr0, rax
 
-; Enable SSE
+; Enable SSE & OSXSAVE
 	mov rax, cr4
 	bts rax, 9			; Set Operating System Support for FXSAVE and FXSTOR instructions (Bit 9)
 	bts rax, 10			; Set Operating System Support for Unmasked SIMD Floating-Point Exceptions (Bit 10)
+;	bts rax, 18			; Set xsave and processor extended states enable (Bit 19) 
 	mov cr4, rax
 
 ; Enable Math Co-processor
 	finit
+
+; Enable AVX
+;	xor rcx, rcx
+;	xgetbv 				; Load XCR0 register
+;	or eax, 0b111 		; Set AVX, SSE, X87 bits
+;	xsetbv 				; Save back to XCR0
 
 ; Enable and Configure Local APIC
 	mov rsi, [os_LocalAPICAddress]

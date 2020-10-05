@@ -181,8 +181,9 @@ intGate:
 	mov rax, [rsp+8]
 	mov rbx, [rsp+16]
 	mov rcx, r10		; Adapt calling conventions
-	call [rsp]
-	add rsp, 8
+	sub rsp, 8	; Align
+	call [rsp + 8]
+	add rsp, 16
 	; replace stored rax for returned value
 	mov [rsp], rax
 	popState
