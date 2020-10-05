@@ -171,6 +171,8 @@ void viewflush(int id)
 void viewLF(int id)
 {
     ConsoleView *view = &views[id];
+    if(view->lines == NULL)
+        return;
     CharEntry (*buf)[view->maxLines][view->width] = (void*)view->lines;
     
     view->lineEnd++;
@@ -188,6 +190,8 @@ void viewLF(int id)
 int viewWrite(int id, const char *text, size_t n)
 {
     ConsoleView *view = &views[id];
+    if(view->lines == NULL)
+        return 0;
     CharEntry (*buf)[view->maxLines][view->width] = (void*)view->lines;
 
     for(int i = 0; i < n; i++, text++)

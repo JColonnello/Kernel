@@ -92,11 +92,13 @@ _execve:
     mov rsp, rax
 	mov rbp, rax
     push rcx
+	sub rsp, 8
 
 	cli
     call execve
 	sti
 
+	add rsp, 8
     pop rsp
 	mov rdi, rbp
 	push rax

@@ -337,14 +337,14 @@ struct MallocNode
 	size_t size;
 	bool used;
 	MallocNode *next;
-	char block[];
+	__attribute__((aligned(16))) char block[];
 };
 
 MallocNode *firstNode = NULL;
 void *kmalloc(size_t size)
 {
 	MallocNode **lastNode = &firstNode;
-
+	size = (size + 15) & (size_t)~0xF;
 	while(*lastNode != NULL)
 	{
 		MallocNode *node = *lastNode;
