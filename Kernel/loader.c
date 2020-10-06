@@ -15,6 +15,8 @@ void _init()
 	pd->pml4 = 0x2000;
 	pd->tty = 0;
 	pd->fdtSize = initFD(&pd->fd, pd->tty);
+	pd->foreground = false;
+	pd->state = PROCESS_RUNNING;
 	Scheduler_Init();
 	load_idt();
 

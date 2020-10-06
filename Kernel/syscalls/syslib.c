@@ -211,6 +211,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
         kfree(kargs);
     
     _switchPML4(curr->pml4);
+    setProcessState(pid, PROCESS_RUNNING);
     return pid;
 }
 
@@ -309,6 +310,24 @@ static enum PdJobStatus setjobstatus(int pid, enum PdJobStatus status)
     return setJobStatus(pid, status);
 }
 
+static int block(int pid)
+{
+    ProcessState state = getProcessState(pid);
+    switch (state) 
+    {
+        case PROCESS_RUNNING:
+            setProcessState(pid, PROCESS_PENDING_BLOCK);
+            break;
+        case PROCESS_PENDING_BLOCK:
+        case PROCESS_BLOCKED:
+            setProcessState(pid, PROCESS_RUNNING);
+            break;
+        default:
+            break;
+    }
+    return state;
+}
+
 Syscall *funcTable[] = 
 {
     [0] = (Syscall*)read,
@@ -329,6 +348,7 @@ Syscall *funcTable[] =
     [62] = (Syscall*)kill,
     [406] = (Syscall*)ispidrun,
     [407] = (Syscall*)setjobstatus,
+    [408] = (Syscall*)block,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

@@ -25,6 +25,7 @@ syscallDef memuse, 405
 syscallDef kill, 62
 syscallDef ispidrun, 406
 syscallDef setjobstatus, 407
+syscallDef block, 408
 
 global _hlt
 _hlt:

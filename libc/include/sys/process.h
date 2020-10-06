@@ -7,3 +7,4 @@ int kill(int pid);
 int ispidrun(int pid);
 void yield();
 enum PdJobStatus setjobstatus(int pid, enum PdJobStatus status);
+int block(int pid);

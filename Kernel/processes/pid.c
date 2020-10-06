@@ -27,17 +27,18 @@ int createProcess(ProcessDescriptor **out)
         return -1;
 
     ProcessDescriptor *curr = currentProcess(), *pd = &descriptors[i];
-    *pd = (ProcessDescriptor) {0};
-    pd->pid = i;
-    pd->tty = curr->tty;
-    pd->pml4 = createPML4();
-    pd->fdtSize = initFD(&pd->fd, pd->tty);
-    pd->parent = curr;
-    pd->foreground = true;
+    *pd = (ProcessDescriptor) 
+    {
+        .pml4 = createPML4(),
+        .pid = i,
+        .tty = curr->tty,
+        .parent = curr,
+        .foreground = true,
+    };
+    pd->fdtSize = initFD(&pd->fd, pd->tty),
 
     inUse[i] = true;
     *out = pd;
-    Scheduler_AddProcess(pd);
 
     return pd->pid;
 }
@@ -148,4 +149,36 @@ enum PdJobStatus setJobStatus(int pid, enum PdJobStatus status)
             return JOB_NONE;
     }
     return pd->foreground ? JOB_FOREGROUND : JOB_BACKGROUND;
+}
+
+void setCurrentState(ProcessState state)
+{
+    setProcessState(currentPID, state);
+}
+
+void setProcessState(int pid, ProcessState state)
+{
+    if(!isRunning(pid))
+        return;
+
+    ProcessDescriptor *pd = &descriptors[pid];
+    if((pd->state == PROCESS_BLOCKED || pd->state == PROCESS_NONE)
+        && state == PROCESS_RUNNING)
+    {
+        Scheduler_AddProcess(pd);
+    }
+    pd->state = state;
+}
+
+ProcessState getProcessState(int pid)
+{
+    if(!isRunning(pid))
+        return PROCESS_NONE;
+
+    return descriptors[pid].state;
+}
+
+unsigned getCurrentPid()
+{
+    return currentPID;
 }

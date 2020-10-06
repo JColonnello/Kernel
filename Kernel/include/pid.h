@@ -7,6 +7,14 @@
 
 typedef struct ProcessDescriptor ProcessDescriptor;
 
+typedef enum
+{
+    PROCESS_NONE,
+    PROCESS_RUNNING,
+    PROCESS_BLOCKED,
+    PROCESS_PENDING_BLOCK,
+} ProcessState;
+
 struct ProcessDescriptor
 {
     uintptr_t pml4;
@@ -20,6 +28,7 @@ struct ProcessDescriptor
     char name[64];
     bool exitMark;
     bool foreground;
+    ProcessState state;
     ProcessDescriptor *parent;
 };
 
@@ -34,3 +43,8 @@ size_t listProcesses(struct ProcessInfo *buffer, size_t size);
 void contextSwitch(ProcessDescriptor *next);
 void dropProcess(int pid);
 enum PdJobStatus setJobStatus(int pid, enum PdJobStatus status);
+void setCurrentState(ProcessState state);
+void setProcessState(int pid, ProcessState state);
+unsigned getCurrentPid();
+void checkProcessSignals();
+ProcessState getProcessState(int pid);
