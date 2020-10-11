@@ -64,7 +64,7 @@ typedef struct
     WaitHandle *handle;
 } ConsoleView;
 
-static CharEntry (*video)[25][80] = (void*)&__vga + 0x18000;
+static CharEntry (*video)[25][80] = (void*)&__vga;
 static ConsoleView views[MAX_VIEWS];
 static const char defaultColor = 0x07;
 int focusedView = 0;
