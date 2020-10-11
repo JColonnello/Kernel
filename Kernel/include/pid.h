@@ -2,18 +2,14 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <syslib.h>
+#include <common/processInfo.h>
 
 #define MAX_PID 64
+#define KERNEL_PID 1
+#define INACTIVE_PID 0
 
 typedef struct ProcessDescriptor ProcessDescriptor;
-
-typedef enum
-{
-    PROCESS_NONE,
-    PROCESS_RUNNING,
-    PROCESS_BLOCKED,
-    PROCESS_PENDING_BLOCK,
-} ProcessState;
+typedef enum ProcessState ProcessState;
 
 struct ProcessDescriptor
 {
@@ -32,8 +28,7 @@ struct ProcessDescriptor
     ProcessDescriptor *parent;
 };
 
-#include <common/processInfo.h>
-
+void initProcesses();
 ProcessDescriptor *currentProcess();
 int createProcess(ProcessDescriptor **out);
 uintptr_t getKernelStack();
@@ -41,6 +36,7 @@ bool isRunning(int pid);
 void exitProcess();
 size_t listProcesses(struct ProcessInfo *buffer, size_t size);
 void contextSwitch(ProcessDescriptor *next);
+void goInactive();
 void dropProcess(int pid);
 enum PdJobStatus setJobStatus(int pid, enum PdJobStatus status);
 void setCurrentState(ProcessState state);

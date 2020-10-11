@@ -28,7 +28,7 @@ void Scheduler_SwitchNext()
 	_cli();
 	pending = false;
 	ProcessDescriptor *next, *curr = currentProcess();
-	if(isRunning(curr->pid))
+	if(isRunning(curr->pid) && curr->pid != INACTIVE_PID)
 	{
 		switch (curr->state) 
 		{
@@ -45,14 +45,17 @@ void Scheduler_SwitchNext()
 	
 	if(Queue_Count(ready) == 0)
 	{
+		if(Queue_Count(waiting) == 0)
+		{
+			goInactive();
+			return;
+		}
 		Queue *tmp = ready;
 		ready = waiting;
 		waiting = tmp;
 	}
 
 	Queue_Dequeue(ready, &next);
-	//Clean interrupt before switch
-	outb(0x20, 0x20);
 	contextSwitch(next);
 }
 

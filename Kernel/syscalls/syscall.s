@@ -140,8 +140,13 @@ _switch:
 
 	mov [rdx], rsp
 _abandon:
+	mov rax, cr3
+	and rax, ~0xFFF
+	cmp rax, rdi
+	je .skipPML4
 	or rdi, 0x8
     mov cr3, rdi
+.skipPML4:
 	mov rsp, [rsi]
 	call checkProcessSignals
 	sti

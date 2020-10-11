@@ -6,6 +6,7 @@
 #include <naiveConsole.h>
 #include <stdbool.h>
 #include <pid.h>
+#include <syncro/wait.h>
 
 typedef enum
 {
@@ -60,6 +61,7 @@ typedef struct
     size_t inputStart;
     size_t inputCount;
     size_t maxInput;
+    WaitHandle *handle;
 } ConsoleView;
 
 static CharEntry (*video)[25][80] = (void*)&__vga + 0x18000;
@@ -98,6 +100,7 @@ int createConsoleView(int startY, int startX, int height, int width)
     }
     view.input = kmalloc(PAGE_SIZE);
     view.maxInput = PAGE_SIZE;
+    view.handle = WaitHandle_Create();
 
     for(int i = startY; i < startY + height; i++)
         if(i >= 0 && i < 25)
@@ -272,6 +275,7 @@ void inputBufferWrite(char c)
             view->flushInput = true;
         }
         viewWrite(focusedView, &c, 1);
+        releaseOne(view->handle);
     }
 }
 
@@ -288,8 +292,7 @@ int inputBufferRead(int id, char *dest, size_t count)
     bool done = false;
     for(i = 0; i < count && !done; i++)
     {
-        while(view->inputCount < (count - i) && view->inputCount < view->maxInput && !view->flushInput)
-            yield();
+        waitEvent(view->handle, (view->inputCount < (count - i) && view->inputCount < view->maxInput && !view->flushInput));
         dest[i] = view->input[view->inputStart++];
         if(view->inputStart == view->maxInput)
             view->inputStart = 0;

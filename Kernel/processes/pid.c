@@ -8,13 +8,40 @@
 #include <scheduler.h>
 
 static ProcessDescriptor descriptors[MAX_PID] = {0};
-static bool inUse[MAX_PID] = {[0] = true};
+static bool inUse[MAX_PID] = {[INACTIVE_PID] = true, [KERNEL_PID] = true};
+uintptr_t inacStack[PAGE_SIZE];
 
-static int currentPID = 0;
+static int currentPID = KERNEL_PID;
 
 ProcessDescriptor *currentProcess()
 {
     return &descriptors[currentPID];
+}
+
+extern void inactiveProcess();
+void initProcesses()
+{
+    ProcessDescriptor *kernel = &descriptors[KERNEL_PID];
+    *kernel = (struct ProcessDescriptor)
+    {
+        .pid = KERNEL_PID,
+        .pml4 = 0x2000,
+        .tty = 0,
+        .foreground = false,
+        .state = PROCESS_RUNNING,
+        .name = "kernel",
+    };
+    kernel->fdtSize = initFD(&kernel->fd, kernel->tty);
+    ProcessDescriptor *inactive = &descriptors[INACTIVE_PID];
+    *inactive = (struct ProcessDescriptor)
+    {
+        .state = PROCESS_RUNNING,
+        .stack = (uintptr_t)inacStack + sizeof(inacStack),
+        .pid = INACTIVE_PID,
+        .name = "inactive",
+    };
+    inactive->stack -= sizeof(void*);
+    *(void (**)())inactive->stack = inactiveProcess;
 }
 
 int createProcess(ProcessDescriptor **out)
@@ -62,11 +89,25 @@ void freeKernelStack(uintptr_t stack)
 
 extern void _switch(uintptr_t pml4, uintptr_t *newStack, uintptr_t *stackSave);
 
+void goInactive()
+{
+    if(currentPID == INACTIVE_PID)
+        return;
+    ProcessDescriptor *curr = currentProcess();
+    ProcessDescriptor *next = &descriptors[INACTIVE_PID];
+    
+    currentPID = INACTIVE_PID;
+	outb(0x20, 0x20);
+    //No need to switch PML4
+    _switch(curr->pml4, &next->stack, &curr->stack);
+}
+
 void contextSwitch(ProcessDescriptor *next)
 {
     ProcessDescriptor *curr = currentProcess();
 
     currentPID = next->pid;
+	outb(0x20, 0x20);
     _switch(next->pml4, &next->stack, &curr->stack);
 }
 
@@ -94,7 +135,11 @@ void dropProcess(int pid)
 {
     if(pid >= MAX_PID || pid < 0)
         return;
-    descriptors[pid].exitMark = true;
+    
+    ProcessDescriptor *pd = &descriptors[pid];
+    pd->exitMark = true;
+    if(pd->state == PROCESS_BLOCKED)
+        Scheduler_AddProcess(pd);
 }
 
 void checkProcessSignals()
@@ -119,7 +164,8 @@ size_t listProcesses(struct ProcessInfo *buffer, size_t size)
         buffer[count] = (struct ProcessInfo)
         {
             .pid = pd->pid,
-            .stack = pd->stack
+            .stack = pd->stack,
+            .state = pd->state,
         };
         for (int j = 0; j < sizeof(buffer[count].name) && pd->name[j]; j++)
             buffer[count].name[j] = pd->name[j];

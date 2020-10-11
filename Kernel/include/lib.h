@@ -27,3 +27,5 @@ bool isKernelAddress(void *address);
 void _cli(void);
 void _sti(void);
 void _hlt(void);
+
+#define cstrcpy(dest, str) memcpy((dest), str, sizeof(str))
