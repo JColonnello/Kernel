@@ -194,7 +194,7 @@ void dropTable()
 		.ptoff = LOOPBACK,
 		.poff = 0,
 	};
-	VirtualAddr limit = { .ptr = &__startOfUniverse };
+	VirtualAddr limit = { .ptr = (void*)&__startOfUniverse };
 	
 	uintptr_t *pml4 = lb.table;
 	while(va.addr < limit.addr)
@@ -424,5 +424,5 @@ void *kcalloc(size_t nmemb, size_t size)
 
 bool isKernelAddress(void *address)
 {
-	return (uintptr_t)address>>39 == LOOPBACK || (char*)address >= &__startOfUniverse;
+	return (uintptr_t)address>>39 == LOOPBACK || (void*)address >= &__startOfUniverse;
 }

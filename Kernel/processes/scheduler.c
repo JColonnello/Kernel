@@ -1,6 +1,7 @@
 #include <collections/queue.h>
 #include <scheduler.h>
 #include <lib.h>
+#include <pid.h>
 
 static Queue *ready, *waiting;
 static bool enabled, pending;

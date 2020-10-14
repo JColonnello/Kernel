@@ -10,11 +10,7 @@ global inb
 section .text
 	
 cpuVendor:
-	push rbp
-	mov rbp, rsp
-
 	push rbx
-
 	mov eax, esi
 	cpuid
 
@@ -27,9 +23,6 @@ cpuVendor:
 	mov [rdi + 12], edx
 .end
 	pop rbx
-
-	mov rsp, rbp
-	pop rbp
 	ret
 
 outb:

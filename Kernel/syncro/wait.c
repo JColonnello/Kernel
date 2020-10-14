@@ -1,4 +1,6 @@
 #include <syncro/wait.h>
+#include <stdarg.h>
+#include <pid.h>
 
 struct __PDNode {
 	unsigned pid;
@@ -44,6 +46,27 @@ void __freeWaitEntry(WaitHandle *handle, struct __PDNode *node)
 	tmp = node;
 	__atomic_compare_exchange_n(&handle->first, &tmp, node->next, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 	kfree(node);
+}
+
+void __freeWaitEntries(struct __PDNode *node, ...)
+{
+	va_list args;
+	va_start(args, node);
+
+	WaitHandle *handle;
+	while((handle = va_arg(args, WaitHandle*)) != NULL)
+		__freeWaitEntry(handle, node);
+	va_end(args);
+}
+void __addWaitEntries(struct __PDNode *node, ...)
+{
+	va_list args;
+	va_start(args, node);
+
+	WaitHandle *handle;
+	while((handle = va_arg(args, WaitHandle*)) != NULL)
+		__addWaitEntry(handle, node);
+	va_end(args);
 }
 
 void releaseOne(WaitHandle *handle)

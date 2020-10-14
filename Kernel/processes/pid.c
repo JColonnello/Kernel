@@ -13,6 +13,9 @@ uintptr_t inacStack[PAGE_SIZE];
 
 static int currentPID = KERNEL_PID;
 
+extern void Scheduler_AddProcess(const ProcessDescriptor *pd);
+
+
 ProcessDescriptor *currentProcess()
 {
     return &descriptors[currentPID];
