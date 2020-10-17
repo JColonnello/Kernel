@@ -1,17 +1,17 @@
 GLOBAL syscallHandler
 GLOBAL _switchPML4
-GLOBAL _execve
+GLOBAL execve
 GLOBAL _switch
-GLOBAL _abandon
 GLOBAL _dropAndLeave
 GLOBAL temp
 extern funcTable
 extern funcTableSize
 extern getKernelStack
 extern freeKernelStack
-extern execve
+extern _execve
 extern dropTable
 extern Scheduler_SwitchNext
+extern Scheduler_Enable
 extern checkProcessSignals
 
 %macro pushContext 0
@@ -80,7 +80,7 @@ syscallHandler:
     ret
 
 ; Change to kernel stack before rutine
-_execve:
+execve:
 	sub rsp, 8	; Align
     push rbp
 	push rdi
@@ -98,7 +98,7 @@ _execve:
 	sub rsp, 8
 
 	cli
-    call execve
+    call _execve
 	sti
 
 	add rsp, 8
@@ -127,6 +127,7 @@ _dropAndLeave:
 	mov rdi, rbp
 	call freeKernelStack
 	call Scheduler_SwitchNext
+	call Scheduler_Enable
 	cli	; Shouldn't return. Trap for future debugging
 	hlt
 
@@ -139,11 +140,12 @@ _switch:
 	push rax
 
 	mov [rdx], rsp
-_abandon:
+.abandon:
 	mov rax, cr3
 	and rax, ~0xFFF
 	cmp rax, rdi
 	je .skipPML4
+	mov r11, 0xDEAD
 	or rdi, 0x8
     mov cr3, rdi
 .skipPML4:

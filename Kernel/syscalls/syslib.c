@@ -109,10 +109,9 @@ static uintptr_t brk(uintptr_t addr)
     }
 }
 
-extern void _execve();
 extern void _switchPML4(uintptr_t pml4);
 
-int execve(const char *pathname, char *const argv[], char *const envp[])
+int _execve(const char *pathname, char *const argv[], char *const envp[])
 {
     ProcessDescriptor *pdnew, *curr = currentProcess();
 
@@ -336,7 +335,7 @@ Syscall *funcTable[] =
     [3] = (Syscall*)close,
     [12] = (Syscall*)brk,
     [39] = (Syscall*)getpid,
-    [59] = (Syscall*)_execve,
+    [59] = (Syscall*)execve,
     [60] = (Syscall*)exit,
     [64] = (Syscall*)yield,
     [400] = (Syscall*)temp,

@@ -111,7 +111,7 @@ int reg_offsets[] =
 
 void defaultException(RegisterStatus *registers)
 {
-    _cli();
+    Scheduler_Disable();
     ncNewline();
     ncPrint("ColOS - Exception ");
     ncPrint(exc_string[registers->irqNumber]);

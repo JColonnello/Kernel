@@ -120,7 +120,7 @@ void exitProcess()
 {
     ProcessDescriptor *pd = currentProcess(), *parent = pd->parent;
     //Drop PML4
-    _cli();
+    Scheduler_Disable();
     kfree(pd->fd);
     inUse[pd->pid] = false;
     if(parent == NULL)
