@@ -27,3 +27,4 @@ int close(int fd);
 int execve(const char *pathname, char *const argv[], char *const envp[]);
 void yield();
 void dumpregs(RegisterStatus *info);
+void exit(int status);

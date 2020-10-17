@@ -14,34 +14,29 @@ typedef int64_t i64;
 
 typedef struct
 {
-    uint64_t rax;
-    uint64_t rbx;
-    uint64_t rcx;
-    uint64_t rdx;
-    uint64_t r8;
-    uint64_t r9;
-    uint64_t r10;
-    uint64_t r11;
-    uint64_t r12;
-    uint64_t r13;
-    uint64_t r14;
-    uint64_t r15;
-    uint64_t rdi;
-    uint64_t rsi;
-    uint64_t rbp;
-    uint64_t rsp;
-    uint64_t irqNumber;
-    union
-    {
-        struct
-        {
-            uint64_t errorCode;
-            uint64_t rip;
-        } exception;
-        struct
-        {
-            uint64_t rip;
-            uint64_t : 64;
-        } irq;
-    };
+    u64 rax;
+    u64 rbx;
+    u64 rcx;
+    u64 rdx;
+    u64 r8;
+    u64 r9;
+    u64 r10;
+    u64 r11;
+    u64 r12;
+    u64 r13;
+    u64 r14;
+    u64 r15;
+    u64 rdi;
+    u64 rsi;
+    u64 rbp;
+    u64 irqNumber;
+    u32 errorCode;
+    long : 32;
+    u64 rip;
+    u16 cs;
+    long : 48;
+    u64 rflags;
+    u64 rsp;
+    u16 ss;
+    long : 48;
 } RegisterStatus;

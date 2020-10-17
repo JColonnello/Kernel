@@ -5,11 +5,14 @@ extern _init
 extern __endOfKernel
 extern __startOfUniverse
 extern __bss
+extern exception_stack
 
 PML4_ADDR equ 0x2000
 PDP_ADDR equ 0x3000
 PD_ADDR equ 0x10000
 PT_ADDR equ 0x50000
+
+GDT equ __startOfUniverse + 0x1000
 
 section .text_loader
 
@@ -105,11 +108,38 @@ longJump:
 	mov [rdi], dword 0xFFFFFFFF
 	add rdi, 8
 	loop .fixIDT
+
+.createTSS:
+	mov rax, TSS
+	lea rdi, [GDT + 16]
+	mov rbx, rax		; save TSS address
+	mov ax, 0x67		; segment limit
+	stosw
+	mov rax, rbx		; get address
+	stosw				; store low word (15..0)
+	shr rax, 16
+	stosb				; store (23..16)
+	mov al, 0b10001001	; TSS marker
+	stosb
+	mov al, 0			; granularity and high limit
+	stosb
+	mov rax, rbx
+	shr rax, 24
+	stosb				; store (31..24)
+	shr rax, 8
+	stosd				; store extra high word (63..32)
+	xor rax, rax
+	stosd				; reserved
+
 	; Reload GDT & IDT
 	mov rax, GDTR64
 	lgdt [rax]
 	mov rax, IDTR64
 	lidt [rax]
+
+	; Load TSS
+	mov ax, 2 << 3 | 0b000
+	ltr ax
 
 	; Configure RTC
 	mov al, 0x0B
@@ -141,5 +171,14 @@ clearBSS:
 IDTR64: dw 256*16-1
 		dq __startOfUniverse
 
-GDTR64: dw 3 * 8 - 1
+GDTR64: dw 2 * 16 - 1
 		dq __startOfUniverse + 0x1000
+
+TSS: 	resb 0x24
+		dq exception_stack
+		resb 0x3c
+
+section .bss
+align 16
+resb 0x1000 * 4
+exception_stack:

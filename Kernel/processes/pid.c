@@ -149,7 +149,7 @@ void checkProcessSignals()
 {
     ProcessDescriptor *pd = currentProcess();
     if(pd->exitMark)
-        exitProcess();
+        exit(0);
 }
 
 size_t listProcesses(struct ProcessInfo *buffer, size_t size)

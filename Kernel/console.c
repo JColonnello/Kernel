@@ -1,4 +1,3 @@
-#include "interrupts/interrupts.h"
 #include <console.h>
 #include <stddef.h>
 #include <loader.h>
@@ -365,9 +364,8 @@ void ncPrintBase(uint64_t value, uint32_t base)
     ncPrint(buffer);
 }
 
-void ncPrintPointer(void *pointer)
+void ncPrintPointer(uintptr_t value)
 {
-	uintptr_t value = (uintptr_t)pointer;
 	//Calculate characters for each digit
 	for(int i = 15; i >= 0; i--, value >>= 4)
 	{
