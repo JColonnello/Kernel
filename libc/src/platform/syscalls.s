@@ -26,6 +26,12 @@ syscallDef kill, 62
 syscallDef ispidrun, 406
 syscallDef setjobstatus, 407
 syscallDef block, 408
+syscallDef sem_wait, 409
+syscallDef sem_release, 410
+syscallDef sem_create, 411
+syscallDef sem_getId, 412
+syscallDef sem_open, 413
+syscallDef sem_close, 414
 
 global _hlt
 _hlt:

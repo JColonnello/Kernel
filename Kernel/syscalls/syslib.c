@@ -327,6 +327,8 @@ static int block(int pid)
     return state;
 }
 
+#include <syncro/semaphore.h>
+
 Syscall *funcTable[] = 
 {
     [0] = (Syscall*)read,
@@ -348,6 +350,12 @@ Syscall *funcTable[] =
     [406] = (Syscall*)ispidrun,
     [407] = (Syscall*)setjobstatus,
     [408] = (Syscall*)block,
+    [409] = (Syscall*)sem_wait,
+    [410] = (Syscall*)sem_release,
+    [411] = (Syscall*)sem_create,
+    [412] = (Syscall*)sem_getId,
+    [413] = (Syscall*)sem_open,
+    [414] = (Syscall*)sem_close,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

@@ -16,6 +16,8 @@ const char *stateString(enum ProcessState state)
 			return "PENDING BLOCK";
 		case PROCESS_BLOCKED:
 			return "BLOCKED";
+		default:
+			return "";
 	}
 }
 

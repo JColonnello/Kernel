@@ -291,7 +291,7 @@ int inputBufferRead(int id, char *dest, size_t count)
     bool done = false;
     for(i = 0; i < count && !done; i++)
     {
-        waitEvent((view->inputCount < (count - i) && view->inputCount < view->maxInput && !view->flushInput),
+        waitEvent(view->inputCount >= (count - i) || view->inputCount >= view->maxInput || view->flushInput,
                     view->handle);
         dest[i] = view->input[view->inputStart++];
         if(view->inputStart == view->maxInput)

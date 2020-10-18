@@ -2,18 +2,12 @@
 #include "pid.h"
 #include <stdint.h>
 #include <lib.h>
-#include <console.h>
 #include <loader.h>
 #include <syslib.h>
-#include <disk.h>
+#include <console.h>
 
 int main()
 {	
-	createConsoleView(0,0,12,80);
-	createConsoleView(13,0,12,80);
-	diskInit();
-
-	switchLayout();
 	int pidShell = -1;
 	int pidCal = -1;
 
@@ -31,7 +25,8 @@ int main()
 			currentProcess()->tty = 0;
 			pidCal = execve("userland/shell.bin", NULL, NULL);
 		}
-		_hlt();
+		setCurrentState(PROCESS_PENDING_BLOCK);
+		yield();
 	}
 	_halt();
 	return 0;

@@ -2,6 +2,10 @@ ENTRY(loader)
 SECTIONS
 {
 	__startOfUniverse = 0xFFFFFFFFC0000000;
+	.shared __startOfUniverse + 0x8000:
+	{
+		__test_sync_global = .;
+	}
 	. = __startOfUniverse;
 	__vga = . + 0xA0000 + 0x18000;
 	.text_load __startOfUniverse + 0x100000 :

@@ -11,9 +11,10 @@ void __addWaitEntries(struct __PDNode *node, ...);
 struct __PDNode *__initWaitEntry(WaitHandle *handle);
 
 #include <scheduler.h>
+#include <pid.h>
 #define waitEvent(cond, handle) \
 do { \
-	if(!(cond)) \
+	if((cond)) \
 		break; \
 	struct __PDNode *node = __initWaitEntry((handle)); \
 	for(;;) {\
@@ -21,7 +22,7 @@ do { \
 		checkProcessSignals(); \
 		__addWaitEntry((handle), node); \
 		setCurrentState(PROCESS_PENDING_BLOCK); \
-		if(!(cond)) { \
+		if((cond)) { \
 			break; \
 		} \
 		Scheduler_SwitchNext(); \
@@ -34,7 +35,7 @@ do { \
 
 #define waitEvents(cond, ...) \
 do { \
-	if(!(cond)) \
+	if((cond)) \
 		break; \
 	struct __PDNode *node = __initWaitEntry((handle)); \
 	for(;;) {\
@@ -42,7 +43,7 @@ do { \
 		checkProcessSignals(); \
 		__addWaitEntries(node, __VA_ARGS__, NULL); \
 		setCurrentState(PROCESS_PENDING_BLOCK); \
-		if(!(cond)) { \
+		if((cond)) { \
 			break; \
 		} \
 		Scheduler_SwitchNext(); \
