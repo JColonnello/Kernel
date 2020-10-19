@@ -33,7 +33,7 @@ ProcessDescriptor *currentProcess();
 int createProcess(ProcessDescriptor **out);
 uintptr_t getKernelStack();
 bool isRunning(int pid);
-void exitProcess();
+void exit();
 size_t listProcesses(struct ProcessInfo *buffer, size_t size);
 void contextSwitch(ProcessDescriptor *next);
 void goInactive();

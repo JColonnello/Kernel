@@ -12,7 +12,6 @@
 #include <scheduler.h>
 #include <common/processInfo.h>
 
-#define MAX_FD 128
 typedef int (Syscall)(void);
 
 int read(int fd, void *buf, size_t count)
@@ -58,6 +57,25 @@ int open(const char *path, int mode)
     pd->fd[i] = desc;
     pd->fd[i].isOpen = true;
     return i;
+}
+
+int dup(int fd)
+{
+    ProcessDescriptor *pd = currentProcess();
+
+    if(fd < 0 || fd > pd->fdtSize || !pd->fd[fd].isOpen)
+        return -1;
+
+    int i;
+    for(i = 0; i < pd->fdtSize && pd->fd[i].isOpen; i++) ;
+    if(i == pd->fdtSize)
+        return -2;
+
+    if(pd->fd[fd].dup == NULL)
+        return -3;
+
+    bool success = pd->fd[fd].dup(&pd->fd[fd], &pd->fd[i]);
+    return success ? i : -4;
 }
 
 int close(int fd)
@@ -214,15 +232,6 @@ int _execve(const char *pathname, char *const argv[], char *const envp[])
     return pid;
 }
 
-void exit(int status)
-{
-    ProcessDescriptor *pd = currentProcess();
-    for(int i = 0; i < MAX_FD; i++)
-        if(pd->fd[i].isOpen)
-            close(i);
-    exitProcess();
-}
-
 void yield()
 {
     Scheduler_SwitchNext();
@@ -231,18 +240,6 @@ void yield()
 static int getpid()
 {
     return currentProcess()->pid;
-}
-
-size_t initFD(FileDescriptor **fdt, int tty)
-{
-    size_t size = MAX_FD;
-    *fdt = kcalloc(size, sizeof(FileDescriptor));
-    openStdio(*fdt, tty);
-    (*fdt)[0].isOpen = true;
-    (*fdt)[1].isOpen = true;
-    (*fdt)[2].isOpen = true;
-
-    return size;
 }
 
 int getcpuinfo(char *id, char *model)

@@ -16,9 +16,9 @@ void _init()
 {
 	ncClear();
 	libInit();
-	initProcesses();
 	createConsoleView(0,0,12,80);
 	createConsoleView(13,0,12,80);
+	initProcesses();
 	
 	load_idt();
 	Scheduler_Init();

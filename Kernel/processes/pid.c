@@ -7,6 +7,7 @@
 #include <common/processInfo.h>
 #include <scheduler.h>
 
+#define MAX_FD 128
 static ProcessDescriptor descriptors[MAX_PID] = {0};
 static bool inUse[MAX_PID] = {[INACTIVE_PID] = true, [KERNEL_PID] = true};
 uintptr_t inacStack[PAGE_SIZE];
@@ -19,6 +20,20 @@ extern void Scheduler_AddProcess(const ProcessDescriptor *pd);
 ProcessDescriptor *currentProcess()
 {
     return &descriptors[currentPID];
+}
+
+static size_t initFD(FileDescriptor **fdt, FileDescriptor *parent)
+{
+    size_t size = MAX_FD;
+    *fdt = kcalloc(size, sizeof(FileDescriptor));
+
+    if(parent != NULL)
+    {
+        for(int i = 0; i < MAX_FD; i++)
+            if(parent[i].isOpen && parent[i].dup != NULL)
+                parent[i].dup(&parent[i], &(*fdt)[i]);
+    }
+    return size;
 }
 
 extern void inactiveProcess();
@@ -34,7 +49,7 @@ void initProcesses()
         .state = PROCESS_RUNNING,
         .name = "kernel",
     };
-    kernel->fdtSize = initFD(&kernel->fd, kernel->tty);
+    kernel->fdtSize = initFD(&kernel->fd, NULL);
     ProcessDescriptor *inactive = &descriptors[INACTIVE_PID];
     *inactive = (struct ProcessDescriptor)
     {
@@ -65,7 +80,7 @@ int createProcess(ProcessDescriptor **out)
         .parent = curr,
         .foreground = true,
     };
-    pd->fdtSize = initFD(&pd->fd, pd->tty),
+    pd->fdtSize = initFD(&pd->fd, curr->fd);
 
     inUse[i] = true;
     *out = pd;
@@ -116,13 +131,16 @@ void contextSwitch(ProcessDescriptor *next)
 
 extern void _dropAndLeave();
 
-void exitProcess()
+void exit(int status)
 {
     ProcessDescriptor *pd = currentProcess(), *parent = pd->parent;
-    //Drop PML4
-    Scheduler_Disable();
+    for(int i = 0; i < MAX_FD; i++)
+        if(pd->fd[i].isOpen)
+            close(i);
     kfree(pd->fd);
     inUse[pd->pid] = false;
+    //Drop PML4
+    Scheduler_Disable();
     if(parent == NULL)
     {
         ncPrint("Kernel exit. Halting\n");

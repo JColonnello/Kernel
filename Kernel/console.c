@@ -4,7 +4,6 @@
 #include <lib.h>
 #include <naiveConsole.h>
 #include <stdbool.h>
-#include <pid.h>
 #include <syncro/wait.h>
 
 typedef enum

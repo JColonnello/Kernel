@@ -24,6 +24,20 @@ static int closeFD(FileDescriptorData *data)
     return 0;
 }
 
+static bool dupTTY(const FileDescriptor *fd, struct FileDescriptor *newfd)
+{
+    FileDescriptorData *newdata = kmalloc(sizeof(FileDescriptorData));
+    if(newdata == NULL)
+        return false;
+
+    memcpy(newdata, fd->data, sizeof(FileDescriptorData));
+    memcpy(newfd, fd, sizeof(struct FileDescriptor));
+    newfd->data = newdata;
+
+    return true;
+}
+
+
 void openStdio(FileDescriptor *table, int tty)
 {
     //To not overcomplicate things, is better if we allocate
@@ -34,21 +48,27 @@ void openStdio(FileDescriptor *table, int tty)
     {
         .data = kmalloc(sizeof(FileDescriptorData)),
         .read = readTTY,
-        .close = closeFD
+        .close = closeFD,
+        .dup = dupTTY,
+        .isOpen = true,
     };
     //stdout
     table[1] = (FileDescriptor)
     {
         .data = kmalloc(sizeof(FileDescriptorData)),
         .write = writeTTY,
-        .close = closeFD
+        .close = closeFD,
+        .dup = dupTTY,
+        .isOpen = true,
     };
     //stderr
     table[2] = (FileDescriptor)
     {
         .data = kmalloc(sizeof(FileDescriptorData)),
         .write = writeTTY,
-        .close = closeFD
+        .close = closeFD,
+        .dup = dupTTY,
+        .isOpen = true,
     };
 
     table[0].data->tty = tty;
