@@ -32,6 +32,7 @@ syscallDef sem_create, 411
 syscallDef sem_getId, 412
 syscallDef sem_open, 413
 syscallDef sem_close, 414
+syscallDef dup, 416
 
 global _hlt
 _hlt:

@@ -8,6 +8,7 @@
 #include "host.h"
 #include "lib.h"
 #include "syslib.h"
+#include <io/files.h>
 
 #define SECTOR_SIZE 512
 

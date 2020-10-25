@@ -15,6 +15,7 @@ extern void defaultException();
 extern void defaultInterrupt();
 extern void picMasterMask(uint8_t mask);
 extern void picSlaveMask(uint8_t mask);
+extern int syscallHandler();
 
 void (*exceptionTable[0x20])(void);
 

@@ -96,3 +96,9 @@ void sem_release(Semaphore *handler)
 	handler->resource->count++;
 	releaseOne(handler->resource->wait);
 }
+
+Semaphore *sem_dup(Semaphore *sem)
+{
+	int id = sem->resource->id;
+	return sem_open(id);
+}

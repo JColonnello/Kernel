@@ -10,3 +10,4 @@ Semaphore *sem_create(long unsigned initialCount);
 int sem_getId(Semaphore*);
 Semaphore *sem_open(int id);
 void sem_close(Semaphore *handler);
+Semaphore *sem_dup(Semaphore *);

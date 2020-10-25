@@ -14,7 +14,7 @@
 
 typedef int (Syscall)(void);
 
-int read(int fd, void *buf, size_t count)
+ssize_t read(int fd, void *buf, size_t count)
 {
     ProcessDescriptor *pd = currentProcess();
 
@@ -27,7 +27,7 @@ int read(int fd, void *buf, size_t count)
     return -1;
 }
 
-int write(int fd, const void *buf, size_t count)
+ssize_t write(int fd, const void *buf, size_t count)
 {
     ProcessDescriptor *pd = currentProcess();
 
@@ -75,6 +75,9 @@ int dup(int fd)
         return -3;
 
     bool success = pd->fd[fd].dup(&pd->fd[fd], &pd->fd[i]);
+    if(success)
+        pd->fd[i].isOpen = true;
+
     return success ? i : -4;
 }
 
@@ -301,11 +304,6 @@ static int ispidrun(int pid)
     return isRunning(pid);
 }
 
-static enum PdJobStatus setjobstatus(int pid, enum PdJobStatus status)
-{
-    return setJobStatus(pid, status);
-}
-
 static int block(int pid)
 {
     ProcessState state = getProcessState(pid);
@@ -345,7 +343,7 @@ Syscall *funcTable[] =
     [405] = (Syscall*)memuse,
     [62] = (Syscall*)kill,
     [406] = (Syscall*)ispidrun,
-    [407] = (Syscall*)setjobstatus,
+    [407] = (Syscall*)setJobStatus,
     [408] = (Syscall*)block,
     [409] = (Syscall*)sem_wait,
     [410] = (Syscall*)sem_release,
@@ -353,6 +351,7 @@ Syscall *funcTable[] =
     [412] = (Syscall*)sem_getId,
     [413] = (Syscall*)sem_open,
     [414] = (Syscall*)sem_close,
+    [416] = (Syscall*)dup,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

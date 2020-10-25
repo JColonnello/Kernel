@@ -15,25 +15,29 @@ static void closeStdio()
 
 int main()
 {	
-	int pidShell = -1;
-	int pidCal = -1;
+	int pidShell1 = -1;
+	int pidShell2 = -1;
 
 	FileDescriptor *table = currentProcess()->fd;
 
 	while(true)
 	{
-		if(!isRunning(pidShell))
+		if(!isRunning(pidShell1))
 		{
 			currentProcess()->tty = 0;
+			setJobStatus(KERNEL_PID, JOB_FOREGROUND);
 			openStdio(table, 0);
-			pidShell = execve("userland/shell.bin", NULL, NULL);
+			pidShell1 = execve("userland/shell.bin", NULL, NULL);
+			setJobStatus(KERNEL_PID, JOB_BACKGROUND);
 			closeStdio();
 		}
-		if(!isRunning(pidCal))
+		if(!isRunning(pidShell2))
 		{
 			currentProcess()->tty = 1;
+			setJobStatus(KERNEL_PID, JOB_FOREGROUND);
 			openStdio(table, 1);
-			pidCal = execve("userland/shell.bin", NULL, NULL);
+			pidShell2 = execve("userland/shell.bin", NULL, NULL);
+			setJobStatus(KERNEL_PID, JOB_BACKGROUND);
 			closeStdio();
 		}
 		setCurrentState(PROCESS_PENDING_BLOCK);

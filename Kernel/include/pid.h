@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <syslib.h>
+#include <io/files.h>
 #include <common/processInfo.h>
 
 #define MAX_PID 64

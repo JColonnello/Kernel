@@ -2,6 +2,7 @@
 #include "lib.h"
 #include "syslib.h"
 #include <console.h>
+#include <io/files.h>
 
 struct FileDescriptorData
 {
