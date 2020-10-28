@@ -322,6 +322,31 @@ static int block(int pid)
     return state;
 }
 
+#include <io/pipe.h>
+bool pipe(int fd[static 2])
+{
+    ProcessDescriptor *pd = currentProcess();
+
+    int i;
+    for(i = 0; i < pd->fdtSize && pd->fd[i].isOpen; i++) ;
+    if(i == pd->fdtSize)
+        return -2;
+    int j;
+    for(j = i + 1; j < pd->fdtSize && pd->fd[j].isOpen; j++) ;
+    if(j == pd->fdtSize)
+        return -2;
+
+    bool success = openPipe(&pd->fd[i], &pd->fd[j]);
+    if(success)
+    {
+        pd->fd[i].isOpen = true;
+        pd->fd[j].isOpen = true;
+        fd[0] = i;
+        fd[1] = j;
+    }
+    return success;
+}
+
 #include <syncro/semaphore.h>
 
 Syscall *funcTable[] = 
@@ -351,6 +376,7 @@ Syscall *funcTable[] =
     [412] = (Syscall*)sem_getId,
     [413] = (Syscall*)sem_open,
     [414] = (Syscall*)sem_close,
+    [415] = (Syscall*)pipe,
     [416] = (Syscall*)dup,
 };
 

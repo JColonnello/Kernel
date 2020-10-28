@@ -10,4 +10,5 @@ void date(struct tm *time);
 void dumpregs(RegisterStatus *info);
 void memuse(size_t *bytesPhysical, size_t *bytesVirtual);
 void cpuid(uint32_t data[static 4], uint32_t mode);
+bool pipe(int fd[static 2]);
 int dup(int fd);
