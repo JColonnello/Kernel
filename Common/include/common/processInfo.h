@@ -22,4 +22,5 @@ struct ProcessInfo
     unsigned pid;
     uintptr_t stack;
     enum ProcessState state;
+    enum PdJobStatus job;
 };
