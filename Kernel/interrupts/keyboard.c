@@ -328,6 +328,7 @@ void keyboardHandler(RegisterStatus *registers)
                 break;
             
             uint8_t c = charMap[code][modStatus];
+            uint8_t unmod = charMap[code][0];
             if(dead != 0)
             {
                 int i;
@@ -371,6 +372,11 @@ void keyboardHandler(RegisterStatus *registers)
             else if(code == scanCodes[KEY_SPACE] && (modStatus & MOD_FLAG_ALT))
             {
                 switchLayout();
+            }
+            // Ctrl + D
+            else if(unmod == 'd' && (modStatus & MOD_FLAG_CTRL))
+            {
+                ttyEOF();
             }
             else if(c)
                 inputBufferWrite(c);

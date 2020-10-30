@@ -50,6 +50,7 @@ typedef struct
     int height;
     int width;
     bool flushInput;
+    bool eof;
     CharEntry *lines;
     size_t lineEnd;
     size_t lineCount;
@@ -288,21 +289,28 @@ int inputBufferRead(int id, char *dest, size_t count)
     if(view->input == NULL)
         return 0;
     bool done = false;
-    for(i = 0; i < count && !done; i++)
+    if(view->eof && !view->flushInput)
+        done = true;
+    for(i = 0; i < count && !done;)
     {
         waitEvent(view->inputCount >= (count - i) || view->inputCount >= view->maxInput || view->flushInput,
                     view->handle);
-        dest[i] = view->input[view->inputStart++];
-        if(view->inputStart == view->maxInput)
-            view->inputStart = 0;
-        view->inputCount--;
 
-        if(view->flushInput && view->inputCount == 0)
+        if(view->inputCount > 0)
+        {
+            dest[i++] = view->input[view->inputStart++];
+            if(view->inputStart == view->maxInput)
+                view->inputStart = 0;
+            view->inputCount--;
+        }
+        else if(view->flushInput)
         {
             done = true;
             view->flushInput = false;
         }
     }
+    if(i == 0)
+        view->eof = false;
     return i;
 }
 
@@ -313,6 +321,15 @@ void changeTTY(int id)
         focusedView = id;
 
     viewflush(id);
+}
+
+void ttyEOF()
+{
+    ConsoleView *view = &views[focusedView];
+
+    view->eof = true;
+    view->flushInput = true;
+    releaseOne(view->handle);
 }
 
 static uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
