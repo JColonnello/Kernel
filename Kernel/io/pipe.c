@@ -105,9 +105,17 @@ static int closePipe(FileDescriptorData *data)
 		if(stream->writerefs == 0 && stream->count == 0)
 			sem_release(stream->available);
 	}
+	bool dispose = stream->writerefs == 0 && stream->readrefs == 0;
 	unlock(stream->lock);
 	kfree(data);
 
+	if(dispose)
+	{
+		sem_close(stream->freeSpace);
+		sem_close(stream->available);
+		sem_close(stream->lock);
+		kfree(stream);
+	}
 	return 0;
 }
 

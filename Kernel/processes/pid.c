@@ -57,6 +57,8 @@ void initProcesses()
         .stack = (uintptr_t)inacStack + sizeof(inacStack),
         .pid = INACTIVE_PID,
         .name = "inactive",
+        .fdtSize = kernel->fdtSize,
+        .fd = kernel->fd,
     };
     inactive->stack -= sizeof(void*);
     *(void (**)())inactive->stack = inactiveProcess;
