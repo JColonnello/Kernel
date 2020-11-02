@@ -81,7 +81,7 @@ syscallHandler:
 
 ; Change to kernel stack before rutine
 execve:
-	sub rsp, 8	; Align
+	pushfq
     push rbp
 	push rdi
 	push rsi
@@ -99,7 +99,6 @@ execve:
 
 	cli
     call _execve
-	sti
 
 	add rsp, 8
     pop rsp
@@ -108,7 +107,7 @@ execve:
 	call freeKernelStack
 	pop rax
     pop rbp
-	add rsp, 8
+	popfq
     ret
 
 ; Only usable from kernel stack
@@ -118,14 +117,10 @@ _switchPML4:
     ret
 
 _dropAndLeave:
-	sub rsp, 8	; Align
-	call getKernelStack
-	add rsp,8
+	mov rax, drop_stack
 	mov rbp, rax
 	mov rsp, rax
 	call dropTable
-	mov rdi, rbp
-	call freeKernelStack
 	call Scheduler_SwitchNext
 	call Scheduler_Enable
 	cli	; Shouldn't return. Trap for future debugging
@@ -145,7 +140,6 @@ _switch:
 	and rax, ~0xFFF
 	cmp rax, rdi
 	je .skipPML4
-	mov r11, 0xDEAD
 	or rdi, 0x8
     mov cr3, rdi
 .skipPML4:
@@ -190,3 +184,8 @@ temp:
 
 	pop rbx
 	ret
+
+section .bss
+	align 16
+	resb 0x1000
+drop_stack:

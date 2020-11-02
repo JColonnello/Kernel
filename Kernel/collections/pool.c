@@ -33,7 +33,7 @@ static void reallocMem(Pool *pool, int newSize)
 	size_t dataSize = pool->elemSize * newSize;
 	size_t flagsSize = newSize / 8;
 	size_t oldFlagsSize = pool->size / 8;
-	uintptr_t *mem = kmalloc(dataSize + flagsSize);
+	char *mem = kmalloc(dataSize + flagsSize);
 	//Copy flags to new array (data is copied on realloc)
 	memcpy(mem, pool->data, pool->elemSize * pool->size);
 	pool->data = mem;

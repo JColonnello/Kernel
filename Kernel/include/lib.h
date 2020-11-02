@@ -18,6 +18,7 @@ size_t getReservedPagesCount();
 size_t getReservedMemoryCount();
 void libInit();
 int cpuVendor(void *result, int code);
+__attribute__((noreturn))
 void _halt();
 void outb(uint16_t port, uint8_t data);
 uint8_t inb(uint16_t port);
@@ -28,5 +29,21 @@ void _cli(void);
 void _sti(void);
 void _hlt(void);
 uint64_t _cr2();
+void _invlpg(void *);
+void reloadTLB();
+
+#include <x86intrin.h>
+static inline int bsr(uint64_t v)
+{
+	return __bsrq(v);
+}
+static inline int bsf(uint64_t v)
+{
+	return __bsfq(v);
+}
 
 #define cstrcpy(dest, str) memcpy((dest), str, sizeof(str))
+
+#if !defined VIRT_MEM_LINKED && !defined VIRT_MEM_BUDDY
+#define VIRT_MEM_LINKED
+#endif

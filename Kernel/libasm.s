@@ -6,6 +6,8 @@ global _wait
 global _syscall
 global outb
 global inb
+global _invlpg
+GLOBAL reloadTLB
 
 section .text
 	
@@ -21,7 +23,7 @@ cpuVendor:
 	mov [rdi + 4], ebx
 	mov [rdi + 8], ecx
 	mov [rdi + 12], edx
-.end
+.end:
 	pop rbx
 	ret
 
@@ -53,4 +55,13 @@ _halt:
 _syscall:
 	mov rax, 0
 	int 80h
+	ret
+
+_invlpg:
+	invlpg [rdi]
+	ret
+
+reloadTLB:
+	mov rax, cr3
+	mov cr3, rax
 	ret
