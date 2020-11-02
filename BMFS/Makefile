@@ -1,6 +1,6 @@
 SOURCES := $(shell find lib/ -name *.c)
 OBJS := $(SOURCES:%.c=build/%.o)
-CFLAGS := -m64 -mno-red-zone -ffreestanding -std=c99
+override CFLAGS += -m64 -mno-red-zone -ffreestanding -std=c99
 INC_DIR := include
 LIB := libbmfs.a
 

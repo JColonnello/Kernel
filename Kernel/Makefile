@@ -18,12 +18,12 @@ STATICLIBS=
 all: $(BUILD_DIR)/$(KERNEL)
 
 $(BUILD_DIR)/$(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM) $(BMFS_LIB)
-	$(LD) $(LDFLAGS) $(GCCFLAGS) -g -T kernel.ld -o $@.elf $^
+	$(LD) $(LDFLAGS) $(CFLAGS) -g -T kernel.ld -o $@.elf $^
 	objcopy -O binary $@.elf $@
 
 $(BUILD_DIR)/%.c.o: %.c
 	$(MKDIR_P) $(dir $@)
-	$(GCC) $(GCCFLAGS) $(DEP_FLAGS) -g $(INC_FLAGS) -c $< -o $@
+	$(GCC) $(CFLAGS) $(DEP_FLAGS) -g $(INC_FLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.s.o : %.s
 	$(MKDIR_P) $(dir $@)
