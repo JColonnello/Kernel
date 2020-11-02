@@ -103,7 +103,7 @@ typedef union
 
 //Welcome to code hell
 //Alert: TLB cache magic inbound
-static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
+static bool map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 {
 	VirtualAddr va = { .addr = virtual };
 	//Setup loopback address
@@ -155,11 +155,24 @@ static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 				{
 					if(pt.table[va.ptoff])
 						ncPrint("Overmap\n");
-					pt.table[va.ptoff] = physMap[count++] | 0x7;
+					uintptr_t page;
+					if(physMap != NULL)
+						page = physMap[count];
+					else
+					{
+						page = reservePhysPage();
+						if(page == (uintptr_t)-1)
+						{
+							kunmap((void*)virtual, count);
+							return false;
+						}
+					}
+					pt.table[va.ptoff] = page | 0x7;
+					count++;
 					//Invalidate this entry in TLB
 					_invlpg(va.ptr);
 					if(count >= pageCount)
-						return;
+						return true;
 
 					va.ptoff++;
 					if(va.ptoff == 0)
@@ -177,6 +190,8 @@ static void map(uintptr_t virtual, const uintptr_t *physMap, size_t pageCount)
 		if(va.pml4off == 0)
 			break;
 	}
+	ncPrint("Virtual overrun\n");
+	return false;
 }
 
 static void checkAndFree(uintptr_t entry)
@@ -283,15 +298,7 @@ void kunmap(void *virtual, size_t pageCount)
 
 void *kmap(void **virtual, const void *hint, void **physical, size_t pageCount)
 {
-	uintptr_t phyPages[pageCount];
-	if(physical == NULL)
-	{
-		for(int i = 0; i < pageCount; i++)
-			phyPages[i] = reservePhysPage();
-	}
-	else
-		for(int i = 0; i < pageCount; i++)
-			phyPages[i] = (uintptr_t)*physical + PAGE_SIZE * i;
+	uintptr_t *phyPages = physical != NULL ? *physical : NULL;
 
 	uintptr_t dest;
 	if(virtual == NULL)
@@ -302,7 +309,8 @@ void *kmap(void **virtual, const void *hint, void **physical, size_t pageCount)
 	else
 		dest = (uintptr_t)*virtual;
 
-	map(dest, phyPages, pageCount);
+	if(!map(dest, phyPages, pageCount))
+		return NULL;
 
 	return (void*)dest;
 }

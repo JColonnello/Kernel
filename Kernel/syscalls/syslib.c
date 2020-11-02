@@ -112,7 +112,8 @@ static uintptr_t brk(uintptr_t addr)
         if(pages > 0)
         {
             void *begin = (void*)((pd->prgmBreak-1 + PAGE_SIZE) & PAGE_MASK);
-            kmap(&begin, NULL, NULL, pages);
+            if(kmap(&begin, NULL, NULL, pages) == NULL)
+                return pd->prgmBreak;
         }
         pd->prgmBreak = addr;
         return pd->prgmBreak;
