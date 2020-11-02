@@ -14,6 +14,7 @@ int64_t __test_sync_global;
 
 void _init()
 {
+	memset((void*)&__bss, 0, (&__endOfKernel - &__bss));
 	ncClear();
 	libInit();
 	createConsoleView(0,0,12,80);

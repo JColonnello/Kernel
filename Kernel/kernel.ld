@@ -35,4 +35,5 @@ SECTIONS
 	}
 	. = ALIGN(0x1000);
 	__endOfKernel = .;
+	__endOfKernelStack = . + 0x1000 * (1 + 16);
 }

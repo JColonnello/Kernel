@@ -131,8 +131,10 @@ void contextSwitch(ProcessDescriptor *next)
     _switch(next->pml4, &next->stack, &curr->stack);
 }
 
+__attribute__((noreturn))
 extern void _dropAndLeave();
 
+__attribute__((noreturn))
 void exit(int status)
 {
     ProcessDescriptor *pd = currentProcess(), *parent = pd->parent;

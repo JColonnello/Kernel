@@ -1,5 +1,4 @@
 global loader
-global clearBSS
 extern main
 extern _init
 extern __endOfKernel
@@ -161,13 +160,6 @@ longJump:
 	hlt	; halt machine should kernel return
 	jmp .hang
 
-clearBSS:
-	mov rdi, __bss
-	mov rcx, __endOfKernel
-	sub rcx, rdi
-	shr rcx, 3
-	xor rax, rax
-	rep stosq
 IDTR64: dw 256*16-1
 		dq __startOfUniverse
 
