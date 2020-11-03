@@ -14,8 +14,8 @@ MODULES := $(shell find * -maxdepth 0 -type d -not -name build)
 DIR_NAME := $(shell basename $(CURDIR))
 BUILD_DIR := ../build/$(DIR_NAME)
 BINARIES := $(MODULES:%=%.bin)
-SOURCES := $(shell find * -type f -name *.c)
-SOURCES_ASM := $(shell find * -type f -name *.s)
+SOURCES := $(shell find * -type f -name "*.c")
+SOURCES_ASM := $(shell find * -type f -name "*.s")
 OBJS := $(SOURCES:%=$(BUILD_DIR)/%.o) $(SOURCES_ASM:%=$(BUILD_DIR)/%.o) 
 
 all: $(BINARIES) list

@@ -10,7 +10,7 @@ IMG=$(OSIMAGENAME).img
 KERNEL=../Kernel/build/kernel.bin
 USERLAND= ../Userland/build
 LAYOUTS= ../Layouts
-USERLAND_BIN = $(shell find $(USERLAND) -name *.bin) $(USERLAND)/list.txt
+USERLAND_BIN = $(shell find $(USERLAND) -name "*.bin") $(USERLAND)/list.txt
 LAYOUTS_FILES = $(shell find $(LAYOUTS)/* -printf "\"%f\" ")
 
 IMGSIZE=67108864
