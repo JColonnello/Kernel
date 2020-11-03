@@ -20,6 +20,7 @@ struct ProcessInfo
 {
     char name[64];
     unsigned pid;
+    unsigned priority;
     uintptr_t stack;
     enum ProcessState state;
     enum PdJobStatus job;

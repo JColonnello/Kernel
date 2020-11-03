@@ -25,7 +25,7 @@ struct ProcessDescriptor
     char name[64];
     bool exitMark;
     bool foreground;
-    char priority;
+    unsigned priority;
     ProcessState state;
     ProcessDescriptor *parent;
 };

@@ -205,6 +205,7 @@ size_t listProcesses(struct ProcessInfo *buffer, size_t size)
             .stack = pd->stack,
             .state = pd->state,
             .job = pd->foreground ? JOB_FOREGROUND : JOB_BACKGROUND,
+            .priority = pd->priority,
         };
         for (int j = 0; j < sizeof(buffer[count].name) && pd->name[j]; j++)
             buffer[count].name[j] = pd->name[j];
