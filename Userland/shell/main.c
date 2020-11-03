@@ -21,9 +21,10 @@ int parseTokens(char **toks)
     int in = dup(0);
     int out = dup(1);
     int nextIn = -1;
+    struct process p1;
     for(i = 0; toks[i] != NULL;)
     {
-        struct process p1 = {0};
+        p1 = (struct process){0};
         snprintf(p1.path, sizeof(p1.path), "userland/%s.bin", toks[i++]);
         p1.params = &toks[i];
         while(toks[i] != NULL)
@@ -91,7 +92,7 @@ int parseTokens(char **toks)
     dup(out);
     close(in);
     close(out);
-    return pid;
+    return !p1.background ? pid : -1;
 }
 
 int main(int argc, char *argv[])
