@@ -381,6 +381,7 @@ Syscall *funcTable[] =
     [416] = (Syscall*)dup,
     [417] = (Syscall*)processPriority,
     [418] = (Syscall*)sem_list,
+    [419] = (Syscall*)pipe_list,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

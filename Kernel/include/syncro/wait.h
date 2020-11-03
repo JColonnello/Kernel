@@ -58,3 +58,4 @@ void releaseOne(WaitHandle *handle);
 void releaseAll(WaitHandle *handle);
 WaitHandle *WaitHandle_Create();
 void WaitHandle_Dispose(WaitHandle *handle);
+int WaitHandle_blockedList(const WaitHandle *handle, int *out, size_t n);

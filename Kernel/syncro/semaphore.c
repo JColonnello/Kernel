@@ -120,8 +120,20 @@ int sem_list(SemaphoreStatus *out, size_t n)
 			.id = res->id,
 			.count = res->count,
 		};
+		out[i].blockedCount = WaitHandle_blockedList(res->wait, out[i].blocked, sizeof(out[i].blocked)/sizeof(*out[i].blocked));
 	}
 	unlock(lock);
 
 	return count;
+}
+
+void sem_info(const Semaphore *sem, SemaphoreStatus *out)
+{
+	SemaphoreResource *res = sem->resource;
+	*out = (SemaphoreStatus)
+	{
+		.id = res->id,
+		.count = res->count,
+	};
+	out->blockedCount = WaitHandle_blockedList(res->wait, out->blocked, sizeof(out->blocked)/sizeof(*out->blocked));
 }

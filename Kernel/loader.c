@@ -9,6 +9,7 @@
 extern void load_idt();
 extern int main();
 extern void sem_init();
+extern void pipe_init();
 
 int64_t __test_sync_global;
 
@@ -24,6 +25,7 @@ void _init()
 	load_idt();
 	Scheduler_Init();
 	sem_init();
+	pipe_init();
 	diskInit();
 
 	switchLayout();

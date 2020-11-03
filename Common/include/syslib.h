@@ -7,6 +7,14 @@
 #define O_WRONLY         01
 #define O_RDWR           02
 
+typedef struct 
+{
+	int id;
+	int count;
+	int blockedCount;
+	int blocked[8];
+} PipeInfo;
+
 ssize_t read(int fd, void *buf, size_t count);
 ssize_t write(int fd, const void *buf, size_t count);
 int open(const char *path, int mode);
@@ -16,3 +24,4 @@ int execve(const char *pathname, char *const argv[], char *const envp[]);
 void yield();
 void dumpregs(RegisterStatus *info);
 void exit(int status);
+int pipe_list(PipeInfo *out, int n);

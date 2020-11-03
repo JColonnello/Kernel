@@ -1,3 +1,4 @@
+#include "collections/pool.h"
 #include <io/pipe.h>
 #include <syncro/semaphore.h>
 #include <wait.h>
@@ -12,6 +13,7 @@ struct PipeStream
 	int readrefs;
 	int writerefs;
 	int count;
+	int id;
 	Semaphore *lock;
 	Semaphore *available;
 	Semaphore *freeSpace;
@@ -23,6 +25,15 @@ struct FileDescriptorData
 	bool isReadEnd;
 	struct PipeStream *stream;
 };
+
+static Pool *pool;
+static Semaphore *lock;
+
+void pipe_init()
+{
+	pool = Pool_Create(sizeof(struct PipeStream));
+	lock = sem_create(1);
+}
 
 static int readPipe(FileDescriptorData *data, void *buf, size_t count)
 {
@@ -114,7 +125,9 @@ static int closePipe(FileDescriptorData *data)
 		sem_close(stream->freeSpace);
 		sem_close(stream->available);
 		sem_close(stream->lock);
-		kfree(stream);
+		lock(lock);
+		Pool_Remove(pool, stream->id);
+		unlock(lock);
 	}
 	return 0;
 }
@@ -141,7 +154,17 @@ static bool dupPipe(const struct FileDescriptor *fd, struct FileDescriptor *newf
 
 bool openPipe(FileDescriptor *readfd, FileDescriptor *writefd)
 {
-	struct PipeStream *stream = kcalloc(1, sizeof(struct PipeStream));
+	struct PipeStream *stream;
+
+	lock(lock);
+	{
+		struct PipeStream tmp;
+		int index = Pool_Add(pool, &tmp);
+		stream = Pool_GetRef(pool, index);
+		stream->id = index;
+	}
+	unlock(lock);
+
 	if(stream == NULL)
 		return false;
 	stream->lock = sem_create(1);
@@ -206,4 +229,32 @@ bool openPipe(FileDescriptor *readfd, FileDescriptor *writefd)
 	free_stream:
 	kfree(stream);
 	return false;
+}
+
+int pipe_list(PipeInfo *out, int n)
+{
+	int count = Pool_Count(pool);
+	if(out == NULL)
+		return count;
+	
+	lock(lock);
+	int indexes[count];
+	Pool_ToIndexArray(pool, indexes);
+	for(int i = 0; i < count && i < n; i++)
+	{
+		struct PipeStream *stream = Pool_GetRef(pool, indexes[i]);
+		out[i] = (PipeInfo)
+		{
+			.id = stream->id,
+			.count = stream->count,
+		};
+		int size = sizeof(out[i].blocked) / sizeof(*out[i].blocked);
+		SemaphoreStatus sem;
+		sem_info(stream->available, &sem);
+		out[i].blockedCount = sem.blockedCount < size ? sem.blockedCount : size;
+		memcpy(out[i].blocked, sem.blocked, out[i].blockedCount);
+	}
+	unlock(lock);
+
+	return count;
 }

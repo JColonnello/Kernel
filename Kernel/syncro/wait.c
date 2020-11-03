@@ -117,3 +117,14 @@ void WaitHandle_Dispose(WaitHandle *handle)
 	releaseAll(handle);
 	kfree(handle);
 }
+
+int WaitHandle_blockedList(const WaitHandle *handle, int *out, size_t n)
+{
+	struct __PDNode *node = handle->first;
+	int i;
+	for(i = 0; i < n && node != NULL; i++, node = node->next)
+		if(out != NULL)
+			out[i] = node->pid;
+
+	return i;
+}
