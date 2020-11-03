@@ -251,9 +251,11 @@ void setProcessState(int pid, ProcessState state)
     if((pd->state == PROCESS_BLOCKED || pd->state == PROCESS_NONE)
         && state == PROCESS_RUNNING)
     {
+        pd->state = state;
         Scheduler_AddProcess(pd);
     }
-    pd->state = state;
+    else
+        pd->state = state;
 }
 
 ProcessState getProcessState(int pid)

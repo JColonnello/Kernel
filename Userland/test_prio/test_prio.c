@@ -107,8 +107,7 @@ void test_prio(){
 }
 
 int main(int argc, char **args){
-	// if(argc >= 1 && strcmp(args[0], "endless_loop") == 0)
-	if(argc >= 1)
+	if(argc >= 1 && strcmp(args[0], "endless_loop") == 0)
 	{
 		endless_loop();
 	}

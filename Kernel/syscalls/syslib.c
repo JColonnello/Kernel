@@ -318,7 +318,7 @@ static int block(int pid)
             setProcessState(pid, PROCESS_RUNNING);
             break;
         default:
-            break;
+            return -1;
     }
     return state;
 }
