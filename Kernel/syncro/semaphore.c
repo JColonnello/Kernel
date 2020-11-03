@@ -102,3 +102,26 @@ Semaphore *sem_dup(Semaphore *sem)
 	int id = sem->resource->id;
 	return sem_open(id);
 }
+
+int sem_list(SemaphoreStatus *out, size_t n)
+{
+	int count = Pool_Count(pool);
+	if(out == NULL)
+		return count;
+	
+	lock(lock);
+	int indexes[count];
+	Pool_ToIndexArray(pool, indexes);
+	for(int i = 0; i < count && i < n; i++)
+	{
+		SemaphoreResource *res = Pool_GetRef(pool, indexes[i]);
+		out[i] = (SemaphoreStatus)
+		{
+			.id = res->id,
+			.count = res->count,
+		};
+	}
+	unlock(lock);
+
+	return count;
+}
