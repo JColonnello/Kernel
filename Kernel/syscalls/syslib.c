@@ -238,7 +238,7 @@ int _execve(const char *pathname, char *const argv[], char *const envp[])
 
 void yield()
 {
-    Scheduler_SwitchNext();
+    Scheduler_Yield();
 }
 
 static int getpid()
@@ -379,6 +379,7 @@ Syscall *funcTable[] =
     [414] = (Syscall*)sem_close,
     [415] = (Syscall*)pipe,
     [416] = (Syscall*)dup,
+    [417] = (Syscall*)processPriority,
 };
 
 size_t funcTableSize = sizeof(funcTable) / sizeof(*funcTable);

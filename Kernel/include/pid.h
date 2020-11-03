@@ -25,6 +25,7 @@ struct ProcessDescriptor
     char name[64];
     bool exitMark;
     bool foreground;
+    char priority;
     ProcessState state;
     ProcessDescriptor *parent;
 };
@@ -45,3 +46,4 @@ void setProcessState(int pid, ProcessState state);
 unsigned getCurrentPid();
 void checkProcessSignals();
 ProcessState getProcessState(int pid);
+int processPriority(int pid, int prio);

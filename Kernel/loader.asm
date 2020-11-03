@@ -152,6 +152,12 @@ longJump:
 	pop rax
 	out 0x71, al
 
+	;Pic reload to 5ms
+	mov ax, 5966
+	out 0x40, al
+	shr ax, 8
+	out 0x40, al
+
 .finish:
 	mov rdi, _init
 	call rdi

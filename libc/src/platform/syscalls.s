@@ -34,6 +34,7 @@ syscallDef sem_open, 413
 syscallDef sem_close, 414
 syscallDef pipe, 415
 syscallDef dup, 416
+syscallDef processPriority, 417
 
 global _hlt
 _hlt:

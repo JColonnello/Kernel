@@ -14,7 +14,7 @@ uintptr_t inacStack[PAGE_SIZE];
 
 static int currentPID = KERNEL_PID;
 
-extern void Scheduler_AddProcess(const ProcessDescriptor *pd);
+extern void Scheduler_AddProcess(ProcessDescriptor *pd);
 
 
 ProcessDescriptor *currentProcess()
@@ -48,6 +48,7 @@ void initProcesses()
         .foreground = false,
         .state = PROCESS_RUNNING,
         .name = "kernel",
+        .priority = 3,
     };
     kernel->fdtSize = initFD(&kernel->fd, NULL);
     ProcessDescriptor *inactive = &descriptors[INACTIVE_PID];
@@ -81,6 +82,7 @@ int createProcess(ProcessDescriptor **out)
         .tty = curr->tty,
         .parent = curr,
         .foreground = curr->foreground,
+        .priority = 3,
     };
     pd->fdtSize = initFD(&pd->fd, curr->fd);
 
@@ -95,6 +97,17 @@ bool isRunning(int pid)
     if(pid >= MAX_PID || pid < 0)
         return false;
     return inUse[pid];
+}
+
+int processPriority(int pid, int prio)
+{
+    if(!isRunning(pid))
+        return -1;
+    
+    ProcessDescriptor *pd = &descriptors[pid];
+    if(prio >= 0)
+        pd->priority = prio;
+    return pd->priority;
 }
 
 uintptr_t getKernelStack()
