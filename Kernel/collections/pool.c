@@ -29,6 +29,9 @@ static bool checkIndex(Pool *pool, int index)
 
 static void reallocMem(Pool *pool, int newSize)
 {
+	if(newSize == 0)
+		newSize = DEFAULT_CAPACITY;
+		
 	//Reserve memory for data and flags
 	size_t dataSize = pool->elemSize * newSize;
 	size_t flagsSize = newSize / 8;
@@ -61,7 +64,7 @@ Pool *Pool_Create(size_t elemSize)
 	//Reserve memory for data
 	pool->data = NULL;
 	pool->flags = NULL;
-	reallocMem(pool, DEFAULT_CAPACITY);
+	//reallocMem(pool, DEFAULT_CAPACITY);
 
 	return pool;
 }

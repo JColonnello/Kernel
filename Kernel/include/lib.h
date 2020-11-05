@@ -45,5 +45,5 @@ static inline int bsf(uint64_t v)
 #define cstrcpy(dest, str) memcpy((dest), str, sizeof(str))
 
 #if !defined VIRT_MEM_LINKED && !defined VIRT_MEM_BUDDY
-#define VIRT_MEM_LINKED
+#define VIRT_MEM_BUDDY
 #endif

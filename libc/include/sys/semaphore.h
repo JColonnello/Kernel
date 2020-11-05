@@ -5,7 +5,7 @@
 
 #define BLOCKED_MAX 16
 
-typedef struct {int _id;} Semaphore;
+typedef int Semaphore;
 typedef struct 
 {
 	int id;

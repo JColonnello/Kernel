@@ -26,6 +26,7 @@ void phylo(int pos, int leftId, int rightId)
 
 	while(shared->table[pos].present)
 	{
+		//Think
 		unsigned wait = WAIT + GetUniform(WAIT);
 		for(int i = 0; i < wait; i++);
 
@@ -41,7 +42,6 @@ void phylo(int pos, int leftId, int rightId)
 		for(int i = 0; i < wait; i++);
 		printTable(printLock);
 
-		//Think
 		shared->table[pos].eating = false;
 
 		sem_release(right);

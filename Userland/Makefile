@@ -5,7 +5,7 @@ ASM=nasm
 
 INC_DIRS := $(CURDIR)/../../libc/include $(CURDIR)/../../Common/include
 INC_FLAGS = $(addprefix -I,$(INC_DIRS))
-override CFLAGS+= $(INC_FLAGS) -m64 -mno-red-zone -Wall -ffreestanding -std=c99 # -fexec-charset=cp437
+override CFLAGS+= $(INC_FLAGS) -m64 -mno-red-zone -Wall -ffreestanding -std=c99 -fexec-charset=cp437
 ARFLAGS=rvs
 ASMFLAGS=-felf64
 LDFLAGS=--warn-common -z max-page-size=0x1000

@@ -6,12 +6,14 @@
 #include <string.h>
 
 //TO BE INCLUDED
-void endless_loop(){
-	while(1);
+void endless_loop(int main){
+	while(ispidrun(main));
 }
 
 uint64_t my_create_process(char * name){
-	char *args[] = {"endless_loop", NULL};
+	char pid[10];
+	sprintf(pid, "%d", getpid());
+	char *args[] = {"endless_loop", pid, NULL};
 	return execve("userland/test_processes.bin", args, NULL);
 }
 
@@ -102,9 +104,11 @@ void test_processes(){
 }
 
 int main(int argc, char **args){
-	if(argc >= 1 && strcmp(args[0], "endless_loop") == 0)
+	if(argc >= 2 && strcmp(args[0], "endless_loop") == 0)
 	{
-		endless_loop();
+		int main;
+		sscanf(args[1], "%d", &main);
+		endless_loop(main);
 	}
 	else
 		test_processes();

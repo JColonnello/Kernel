@@ -46,7 +46,7 @@ typedef struct
 
 static AtaDisk data =
 {
-    .size = 6291456,
+    .size = 67108864,
     .offset = 512,
     .pos = 0
 };
