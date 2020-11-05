@@ -79,9 +79,9 @@ int Pool_Add(Pool *pool, void *data)
 		//operate on the next bit
 		for(int block = 0; block * 8 < pool->maxCount; block++)
 		{
-			int chunk = pool->flags[block];
+			uint8_t chunk = pool->flags[block];
 			if(chunk == 255) continue;
-			for(int bit = 0; bit < 8; bit++, pos++)
+			for(int bit = 0; bit < 8; bit++, pos++, chunk <<= 1)
 			{
 				//If a hole is found set that flag to 1 and leave
 				if(chunk <= 127) 

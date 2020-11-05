@@ -82,7 +82,7 @@ int createProcess(ProcessDescriptor **out)
         .tty = curr->tty,
         .parent = curr,
         .foreground = curr->foreground,
-        .priority = 3,
+        .priority = curr->priority,
     };
     pd->fdtSize = initFD(&pd->fd, curr->fd);
 
