@@ -15,6 +15,7 @@ static size_t currVirtualPage = 0;
 size_t reservedMemCount = 0;
 static size_t reservedPagesCount = 0;
 
+__attribute__((used))
 void * memset(void * destination, char c, size_t length)
 {
 	uint8_t chr = (uint8_t)c;
@@ -26,6 +27,7 @@ void * memset(void * destination, char c, size_t length)
 	return destination;
 }
 
+__attribute__((used))
 void * memcpy(void * restrict destination, const void * restrict source, size_t length)
 {
 	char * restrict dst = destination;
@@ -274,8 +276,9 @@ void dropTable()
 	reloadTLB();
 }
 
-void kunmap(void *virtual, size_t pageCount)
+void kunmap(void *virt, size_t pageCount)
 {
+	char *virtual = virt;
 	for(int i = 0; i < pageCount; i++)
 	{
 		VirtualAddr addr = { .ptr = virtual };

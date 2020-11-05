@@ -195,17 +195,17 @@ int _execve(const char *pathname, char *const argv[], char *const envp[])
     _switchPML4(pdnew->pml4);
     
     size_t size = 0;
-    void *exePos = (void*)0x400000;
+    char *exePos = (void*)0x400000;
     int rd;
-    void *pgrmBreak = (void*)exePos;
+    char *pgrmBreak = (void*)exePos;
     do 
     {
         int pageStep = 4;
         size_t step = pageStep * PAGE_SIZE;
-        void *buf = (exePos + size);
+        char *buf = (exePos + size);
         while(buf + step > pgrmBreak)
         {
-            kmap(&pgrmBreak, NULL, NULL, pageStep);
+            kmap((void**)&pgrmBreak, NULL, NULL, pageStep);
             pgrmBreak += pageStep * PAGE_SIZE;
         }
         rd = read(fd, buf, step);

@@ -73,7 +73,7 @@ int Pool_Add(Pool *pool, void *data)
 {
 	int index = Pool_Reserve(pool);
 	if(index >= 0)
-		memcpy(pool->data + pool->elemSize * index, data, pool->elemSize);
+		memcpy((char*)pool->data + pool->elemSize * index, data, pool->elemSize);
 	return index;
 }
 
@@ -126,7 +126,7 @@ bool Pool_Get(Pool *pool, int index, void *dest)
 	if(!checkIndex(pool, index))
 		return false;
 
-	memcpy(dest, pool->data + pool->elemSize * index, pool->elemSize);
+	memcpy(dest, (char*)pool->data + pool->elemSize * index, pool->elemSize);
 	return true;
 }
 
@@ -134,7 +134,7 @@ void *Pool_GetRef(Pool *pool, int index)
 {
 	if(!checkIndex(pool, index))
 		return NULL;
-	return pool->data + pool->elemSize * index;
+	return (char*)pool->data + pool->elemSize * index;
 }
 
 void Pool_Remove(Pool *pool, int index)
@@ -187,8 +187,8 @@ int Pool_ToArray(Pool *pool, void *array)
 		*/
 		if(chunk == 255)
 		{
-			memcpy(array + pool->elemSize * arrayPos,
-			 		pool->data + pool->elemSize * poolPos,
+			memcpy((char*)array + pool->elemSize * arrayPos,
+			 		(char*)pool->data + pool->elemSize * poolPos,
 			 		 pool->elemSize * 8);
 			arrayPos += 8;
 			poolPos += 8;
@@ -198,8 +198,8 @@ int Pool_ToArray(Pool *pool, void *array)
 		{
 			if(chunk >= 128) 
 			{
-				memcpy(array + pool->elemSize * arrayPos,
-			 		pool->data + pool->elemSize * poolPos,
+				memcpy((char*)array + pool->elemSize * arrayPos,
+			 		(char*)pool->data + pool->elemSize * poolPos,
 			 		 pool->elemSize);
 				arrayPos++;
 			}

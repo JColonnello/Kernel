@@ -42,7 +42,7 @@ void endless_loop(){
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 	while(1){
-		printf("%d ",pid);
+		printf("%u ",pid);
 		bussy_wait(MINOR_WAIT);
 	}
 }

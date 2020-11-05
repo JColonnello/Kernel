@@ -4,7 +4,6 @@ extern _init
 extern __endOfKernel
 extern __startOfUniverse
 extern __bss
-extern exception_stack
 
 PML4_ADDR equ 0x2000
 PDP_ADDR equ 0x3000
@@ -110,7 +109,8 @@ longJump:
 
 .createTSS:
 	mov rax, TSS
-	lea rdi, [GDT + 16]
+	mov rdi, GDT
+	add rdi, 16
 	mov rbx, rax		; save TSS address
 	mov ax, 0x67		; segment limit
 	stosw

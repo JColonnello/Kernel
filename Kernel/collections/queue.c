@@ -72,7 +72,7 @@ void Queue_Enqueue(Queue *queue, void *elem)
 	else
 		queue->count++;
 
-	memcpy(queue->data + queue->end * queue->elemSize, elem, queue->elemSize);
+	memcpy((char*)queue->data + queue->end * queue->elemSize, elem, queue->elemSize);
 	queue->end++;
 	queue->end %= queue->capacity;
 }
@@ -82,7 +82,7 @@ bool Queue_Dequeue(Queue *queue, void *elem)
 	if(queue->count == 0)
 		return false;
 
-	memcpy(elem, queue->data + queue->start * queue->elemSize, queue->elemSize);
+	memcpy(elem, (char*)queue->data + queue->start * queue->elemSize, queue->elemSize);
 	queue->start++;
 	queue->start %= queue->capacity;
 	queue->count--;
@@ -95,7 +95,7 @@ bool Queue_Peek(Queue *queue, void *elem)
 	if(queue->count == 0) 
 		return false;
 
-	memcpy(elem, queue->data + queue->start * queue->elemSize, queue->elemSize);
+	memcpy(elem, (char*)queue->data + queue->start * queue->elemSize, queue->elemSize);
 	return true;
 }
 
@@ -111,13 +111,13 @@ void Queue_ToArray(Queue *queue, void *array)
 	int size = (queue->end - queue->start) * queue->elemSize;
 	if(size > 0)
 	{
-		memcpy(array, queue->data + queue->start * queue->elemSize, size);
+		memcpy(array, (char*)queue->data + queue->start * queue->elemSize, size);
 	}
 	else
 	{
 		size = (queue->capacity - queue->start) * queue->elemSize;
-		memcpy(array, queue->data + queue->start * queue->elemSize, size);
-		memcpy(array + size, queue->data, queue->end * queue->elemSize);
+		memcpy(array, (char*)queue->data + queue->start * queue->elemSize, size);
+		memcpy((char*)array + size, queue->data, queue->end * queue->elemSize);
 	}
 }
 

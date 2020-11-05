@@ -1,6 +1,9 @@
 SOURCES := $(shell find lib/ -name "*.c")
+AR=gcc-ar
+RANLIB=gcc-ranlib
+LD=gcc
 OBJS := $(SOURCES:%.c=build/%.o)
-override CFLAGS += -m64 -mno-red-zone -ffreestanding -std=c99
+override CFLAGS += -m64 -mno-red-zone -ffreestanding -std=c99 -mcmodel=large -O3 -flto
 INC_DIR := include
 LIB := libbmfs.a
 

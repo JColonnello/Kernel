@@ -19,7 +19,7 @@ void disk_read(void *dest, uint32_t lba, size_t count)
     while(count > 0)
     {
         size_t n = (count > 255) ? 255 : count;
-        ata_lba_read(dest + 512 * i, lba + i, n);
+        ata_lba_read((char*)dest + 512 * i, lba + i, n);
         i += n;
         count -= n;
     }
@@ -31,7 +31,7 @@ void disk_write(const void *buf, uint32_t lba, size_t count)
     while(count > 0)
     {
         size_t n = (count > 255) ? 255 : count;
-        ata_lba_write(buf + 512 * i, lba + i, n);
+        ata_lba_write((char*)buf + 512 * i, lba + i, n);
         i += n;
         count -= n;
     }
@@ -89,9 +89,10 @@ int ata_tell(void *disk_ptr, bmfs_uint64 *offset)
     return 0;
 }
 
-int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
+int ata_read(void *disk_ptr, void *buffer, bmfs_uint64 len, bmfs_uint64 *read_len)
 {
 	AtaDisk *disk = (AtaDisk*)(disk_ptr);
+    char *buf = buffer;
     lock(disk->lock);
 
     if ((disk->pos + len) > disk->size)
@@ -108,7 +109,7 @@ int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
         if(toRead > remain)
             toRead = remain;
 
-        memcpy(buf, disk->buffer + segment, toRead);
+        memcpy(buf, (char*)disk->buffer + segment, toRead);
         disk->pos += toRead;
         buf += toRead;
         remain -= toRead;

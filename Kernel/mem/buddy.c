@@ -48,12 +48,12 @@ static void set(int level, int index, bool value)
 static int roundExpUp(size_t size)
 {
 	int exp = bsr(size);
-	return size == ONE << exp ? exp : exp+1;
+	return (size == ONE << exp) ? exp : exp+1;
 }
 
 static inline int buddy(int index)
 {
-	return index % 2 ? index - 1 : index + 1;
+	return (index % 2) ? index - 1 : index + 1;
 }
 
 void *kmalloc(size_t size)
@@ -102,7 +102,7 @@ void kfree(void *ptr)
 	if(ptr < &__endOfKernelStack)
 		return;
 
-	uintptr_t rel = (uintptr_t)(ptr - &__endOfKernelStack);
+	uintptr_t rel = (uintptr_t)ptr - (uintptr_t)&__endOfKernelStack;
 	int exp = rel == 0 ? MAX_BLOCK_EXP : bsf(rel);
 	if(exp < MIN_BLOCK_EXP || exp > MAX_BLOCK_EXP)
 		goto error;
