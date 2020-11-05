@@ -12,6 +12,7 @@ extern void sem_init();
 extern void pipe_init();
 
 int64_t __test_sync_global;
+char __test_phylo_global[128];
 
 void _init()
 {

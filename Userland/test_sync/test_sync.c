@@ -72,6 +72,7 @@ void test_sync(){
 	int id = sem_getId(sem);
 	printf("Semaphore: %d\n", id);
 	sprintf(idstr, "%d", id);
+	processPriority(getpid(), 5);
 
 	printf("CREATING PROCESSES...(WITH SEM)\n");
 	int pids[TOTAL_PAIR_PROCESSES*2];
