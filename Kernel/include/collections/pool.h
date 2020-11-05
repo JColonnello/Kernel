@@ -14,3 +14,4 @@ int Pool_ToIndexArray(Pool *pool, int *array);
 int Pool_ToArray(Pool *pool, void *array);
 void Pool_Dispose(Pool *pool);
 void *Pool_Data(Pool *pool);
+int Pool_Reserve(Pool *pool);

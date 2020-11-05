@@ -68,6 +68,14 @@ Pool *Pool_Create(size_t elemSize)
 
 int Pool_Add(Pool *pool, void *data)
 {
+	int index = Pool_Reserve(pool);
+	if(index >= 0)
+		memcpy(pool->data + pool->elemSize * index, data, pool->elemSize);
+	return index;
+}
+
+int Pool_Reserve(Pool *pool)
+{
 	int pos = 0;
 	//If we have reached the end of the array, expland the Pool
 	if(pool->count == pool->size)
@@ -80,7 +88,11 @@ int Pool_Add(Pool *pool, void *data)
 		for(int block = 0; block * 8 < pool->maxCount; block++)
 		{
 			uint8_t chunk = pool->flags[block];
-			if(chunk == 255) continue;
+			if(chunk == 255) 
+			{
+				pos += 8;	
+				continue;
+			}
 			for(int bit = 0; bit < 8; bit++, pos++, chunk <<= 1)
 			{
 				//If a hole is found set that flag to 1 and leave
@@ -102,7 +114,6 @@ int Pool_Add(Pool *pool, void *data)
 		pool->flags[block] |= (uint8_t)128 >> offset;
 		pos = pool->count++;
 	}
-	memcpy(pool->data + pos * pool->elemSize, data, pool->elemSize);
 	if(pool->count > pool->maxCount) pool->maxCount = pool->count;
 	return pos;
 }
