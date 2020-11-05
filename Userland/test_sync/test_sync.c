@@ -1,28 +1,28 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/process.h>
-#include <syncro/semaphore.h>
+#include <sys/semaphore.h>
 #include <stdlib.h>
 
 uint64_t my_create_process(char * name, char *args[]){
 	return execve("userland/test_sync.bin", args, NULL);
 }
 
-Semaphore *my_sem_open(int id){
+Semaphore my_sem_open(int id){
 	return sem_open(id);
 }
 
-uint64_t my_sem_wait(Semaphore *sem){
+uint64_t my_sem_wait(Semaphore sem){
 	sem_wait(sem);
 	return 0;
 }
 
-uint64_t my_sem_post(Semaphore *sem){
+uint64_t my_sem_post(Semaphore sem){
 	sem_release(sem);
 	return 0;
 }
 
-uint64_t my_sem_close(Semaphore *sem){
+uint64_t my_sem_close(Semaphore sem){
 	sem_close(sem);
 	return 0;
 }
@@ -41,8 +41,8 @@ void slowInc(int64_t *p, int64_t inc){
 void inc(int sem_id, int64_t value, uint64_t N) {
 	uint64_t i;
 
-	Semaphore *sem = NULL;
-	if (sem_id > 0 && (sem = my_sem_open(sem_id)) == NULL) {
+	Semaphore sem;
+	if (sem_id > 0 && (sem = my_sem_open(sem_id)) < 0) {
 		printf("ERROR OPENING SEM %d\n", sem_id);
 		return;
 	}
@@ -68,7 +68,7 @@ char *minusargs[] = {idstr, "-1", "100000", NULL};
 void test_sync(){
 	*global = 0;
 
-	Semaphore *sem= sem_create(1);
+	Semaphore sem= sem_create(1);
 	int id = sem_getId(sem);
 	printf("Semaphore: %d\n", id);
 	sprintf(idstr, "%d", id);

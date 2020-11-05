@@ -1,4 +1,4 @@
-#include <syncro/semaphore.h>
+#include <sys/semaphore.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "test_util.h"
@@ -8,7 +8,7 @@ static PhyloStatus *shared = (void*)0xFFFFFFFFC0008010;  //shared memory
 
 #define WAIT 30000000
 
-static void printTable(Semaphore *print)
+static void printTable(Semaphore print)
 {
 	lock(print);
 	for(int i = 0; i < shared->count; i++)
@@ -19,10 +19,10 @@ static void printTable(Semaphore *print)
 
 void phylo(int pos, int leftId, int rightId)
 {
-	Semaphore *printLock = sem_open(shared->printLock),
-			*waiter = sem_open(shared->waiter),
-			*left = sem_open(leftId),
-			*right = sem_open(rightId);
+	Semaphore printLock = sem_open(shared->printLock),
+			waiter = sem_open(shared->waiter),
+			left = sem_open(leftId),
+			right = sem_open(rightId);
 
 	while(shared->table[pos].present)
 	{

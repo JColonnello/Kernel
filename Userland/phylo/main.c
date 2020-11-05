@@ -1,5 +1,5 @@
 #include "common/test.h"
-#include <syncro/semaphore.h>
+#include <sys/semaphore.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -10,7 +10,7 @@ extern void phylo(int pos, int leftId, int rightId);
 
 static PhyloStatus *shared = (void*)0xFFFFFFFFC0008010;  //shared memory
 static int pids[MAX_PHYLO] = {0};
-static Semaphore *forks[MAX_PHYLO] = {0};
+static Semaphore forks[MAX_PHYLO] = {0};
 static int count = 2;
 
 static void setArgs(char *args[static 4], char *buf, int seat, int left, int right)
@@ -77,9 +77,9 @@ static void removePhylo()
 
 static void loop()
 {
-	Semaphore *printLock = sem_create(1);
+	Semaphore printLock = sem_create(1);
 	shared->printLock = sem_getId(printLock);
-	Semaphore *waiter = sem_create(1);
+	Semaphore waiter = sem_create(1);
 	shared->waiter = sem_getId(waiter);
 
 	for(int i = 0; i < count; i++)

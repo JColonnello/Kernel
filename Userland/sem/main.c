@@ -1,4 +1,4 @@
-#include <syncro/semaphore.h>
+#include <sys/semaphore.h>
 #include <stdio.h>
 
 void main()

@@ -350,6 +350,54 @@ bool pipe(int fd[static 2])
 
 #include <syncro/semaphore.h>
 
+static void _sem_wait(int id)
+{
+    Semaphore *sem = sem_handlerById(id);
+    if(sem != NULL)
+        sem_wait(sem);
+}
+
+static void _sem_release(int id)
+{
+    Semaphore *sem = sem_handlerById(id);
+    if(sem != NULL)
+        sem_release(sem);
+}
+
+static int _sem_create(long unsigned initialCount)
+{
+    Semaphore *sem = sem_create(initialCount);
+    if(sem != NULL)
+        return sem_getHandlerId(sem);
+    else
+        return -1;
+}
+
+static int _sem_getId(int id)
+{
+    Semaphore *sem = sem_handlerById(id);
+    if(sem != NULL)
+        return sem_getId(sem);
+    else
+        return -1;
+}
+
+static int _sem_open(int id)
+{
+    Semaphore *sem = sem_open(id);
+    if(sem != NULL)
+        return sem_getHandlerId(sem);
+    else
+        return -1;
+}
+
+static void _sem_close(int id)
+{
+    Semaphore *sem = sem_handlerById(id);
+    if(sem != NULL)
+        sem_close(sem);
+}
+
 Syscall *funcTable[] = 
 {
     [0] = (Syscall*)read,
@@ -371,12 +419,12 @@ Syscall *funcTable[] =
     [406] = (Syscall*)ispidrun,
     [407] = (Syscall*)setJobStatus,
     [408] = (Syscall*)block,
-    [409] = (Syscall*)sem_wait,
-    [410] = (Syscall*)sem_release,
-    [411] = (Syscall*)sem_create,
-    [412] = (Syscall*)sem_getId,
-    [413] = (Syscall*)sem_open,
-    [414] = (Syscall*)sem_close,
+    [409] = (Syscall*)_sem_wait,
+    [410] = (Syscall*)_sem_release,
+    [411] = (Syscall*)_sem_create,
+    [412] = (Syscall*)_sem_getId,
+    [413] = (Syscall*)_sem_open,
+    [414] = (Syscall*)_sem_close,
     [415] = (Syscall*)pipe,
     [416] = (Syscall*)dup,
     [417] = (Syscall*)processPriority,

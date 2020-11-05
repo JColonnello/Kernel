@@ -158,8 +158,7 @@ bool openPipe(FileDescriptor *readfd, FileDescriptor *writefd)
 
 	lock(lock);
 	{
-		struct PipeStream tmp;
-		int index = Pool_Add(pool, &tmp);
+		int index = Pool_Reserve(pool);
 		stream = Pool_GetRef(pool, index);
 		stream->id = index;
 	}

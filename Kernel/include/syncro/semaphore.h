@@ -25,3 +25,6 @@ void sem_close(Semaphore *handler);
 Semaphore *sem_dup(Semaphore *);
 int sem_list(SemaphoreStatus *out, size_t n);
 void sem_info(const Semaphore *sem, SemaphoreStatus *out);
+
+Semaphore *sem_handlerById(int index);
+int sem_getHandlerId(Semaphore *sem);
