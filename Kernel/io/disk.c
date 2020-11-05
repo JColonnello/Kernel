@@ -7,6 +7,7 @@
 #include <bmfs/file.h>
 #include "host.h"
 #include "lib.h"
+#include "syncro/semaphore.h"
 #include "syslib.h"
 #include <io/files.h>
 
@@ -42,6 +43,7 @@ typedef struct
     bmfs_uint64 pos;
     bmfs_uint64 offset;
     void *buffer;
+    Semaphore *lock;
 } AtaDisk;
 
 static AtaDisk data =
@@ -55,6 +57,7 @@ static AtaDisk data =
 int ata_seek(void *disk_ptr, bmfs_uint64 offset, int whence)
 {
 	AtaDisk *disk = (AtaDisk*)(disk_ptr);
+    lock(disk->lock);
 
     if (whence == BMFS_SEEK_SET)
 	{
@@ -75,6 +78,7 @@ int ata_seek(void *disk_ptr, bmfs_uint64 offset, int whence)
 		return BMFS_EINVAL;
 	}
 
+    unlock(disk->lock);
 	return 0;
 }
 
@@ -88,6 +92,7 @@ int ata_tell(void *disk_ptr, bmfs_uint64 *offset)
 int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
 {
 	AtaDisk *disk = (AtaDisk*)(disk_ptr);
+    lock(disk->lock);
 
     if ((disk->pos + len) > disk->size)
 		len = disk->size - disk->pos;
@@ -126,6 +131,7 @@ int ata_read(void *disk_ptr, void *buf, bmfs_uint64 len, bmfs_uint64 *read_len)
         disk->pos += remain;
     }
     
+    unlock(disk->lock);
     *read_len = len;
 	return 0;
 }
@@ -139,6 +145,7 @@ void diskInit()
 {
     bmfs_disk_init(&disk);
     data.buffer = kmalloc(SECTOR_SIZE);
+    data.lock = sem_create(1);
     disk.DiskPtr = &data;
     disk.seek = ata_seek;
     disk.read = ata_read;
