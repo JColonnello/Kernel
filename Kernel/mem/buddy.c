@@ -69,7 +69,7 @@ void *kmalloc(size_t size)
 	size = (ONE << exp);
 	int level = MAX_BLOCK_EXP - exp;
 
-	//Scheduler_Disable();
+	Scheduler_Disable();
 	int i;
 	for (i = 0; i < ONE << level; i++)
 	{
@@ -92,8 +92,8 @@ void *kmalloc(size_t size)
 	for(; level >= 0 && !get(level, i); level--, i /= 2)
 		set(level, i, true);
 
-	//Scheduler_Enable();
 	reservedMemCount += size;
+	Scheduler_Enable();
 	return block;
 }
 
@@ -111,7 +111,7 @@ void kfree(void *ptr)
 	if(i >= ONE << level)
 		goto error;
 
-	//Scheduler_Disable();
+	Scheduler_Disable();
 	if(!get(level, i))
 		goto error;
 	while(get(level+1, i*2))
@@ -127,11 +127,13 @@ void kfree(void *ptr)
 		if(get(level, buddy(i)))
 			break;
 	}
-	//Scheduler_Enable();
 	reservedMemCount -= size;
-	return;
+	goto exit;
+
 	error:
 	ncPrint("Bad free\n");
+	exit:
+	Scheduler_Enable();
 	return;
 }
 

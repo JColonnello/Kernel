@@ -9,7 +9,7 @@ struct SchedEntry
 	unsigned runs;
 };
 static Queue *ready, *waiting;
-static bool enabled, pending;
+static bool enabled, pending, initialized = false;
 static struct SchedEntry current;
 static bool resign;
 
@@ -25,6 +25,7 @@ void Scheduler_Init()
 	current.pd = currentProcess();
 	enabled = true;
 	pending = false;
+	initialized = true;
 }
 
 void Scheduler_Yield()
@@ -36,17 +37,19 @@ void Scheduler_Yield()
 void Scheduler_AddProcess(ProcessDescriptor *pd)
 {
 	struct SchedEntry entry = { .pd = pd, .runs = 0 };
+	Scheduler_Disable();
 	Queue_Enqueue(waiting, &entry);
+	Scheduler_Enable();
 }
 
-void Scheduler_SwitchNext()
+void _Scheduler_SwitchNext()
 {
 	if(!enabled)
 	{
 		pending = true;
 		return;
 	}
-	_cli();
+
 	pending = false;
 	current.runs++;
 	if(current.pd != NULL && isRunning(current.pd->pid))
@@ -94,6 +97,6 @@ void Scheduler_Disable()
 void Scheduler_Enable()
 {
 	enabled = true;
-	if(pending)
+	if(pending && initialized)
 		Scheduler_SwitchNext();
 }

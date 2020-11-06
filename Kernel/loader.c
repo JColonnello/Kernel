@@ -23,11 +23,11 @@ void _init()
 	createConsoleView(13,0,12,80);
 	initProcesses();
 	
-	load_idt();
 	Scheduler_Init();
 	sem_init();
 	pipe_init();
 	diskInit();
+	load_idt();
 
 	switchLayout();
 

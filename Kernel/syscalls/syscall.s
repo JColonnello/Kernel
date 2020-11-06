@@ -4,13 +4,15 @@ GLOBAL execve
 GLOBAL _switch
 GLOBAL _dropAndLeave
 GLOBAL temp
+GLOBAL Scheduler_SwitchNext
+GLOBAL _execve_starter
 extern funcTable
 extern funcTableSize
 extern getKernelStack
 extern freeKernelStack
 extern _execve
 extern dropTable
-extern Scheduler_SwitchNext
+extern _Scheduler_SwitchNext
 extern Scheduler_Enable
 extern checkProcessSignals
 
@@ -145,13 +147,11 @@ _switch:
 .skipPML4:
 	mov rsp, [rsi]
 	call checkProcessSignals
-	sti
 	ret ; Jump to other process
 
 _resume:
 	; RIP has alredy been pop'd
 	popContext
-	sti
 	ret
 
 temp:
@@ -183,6 +183,17 @@ temp:
 	mov [rdi], bl
 
 	pop rbx
+	ret
+
+Scheduler_SwitchNext:
+	pushfq
+	cli
+	call _Scheduler_SwitchNext
+	popfq
+	ret
+
+_execve_starter:
+	sti
 	ret
 
 section .bss

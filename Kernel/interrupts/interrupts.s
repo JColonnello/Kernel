@@ -144,7 +144,6 @@ irqGate:
 	out 20h, al
 	popState
 	add rsp, 16	; pop i & EC
-	sti
 	iretq
 
 %assign i 0

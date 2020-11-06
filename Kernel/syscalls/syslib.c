@@ -132,6 +132,7 @@ static uintptr_t brk(uintptr_t addr)
 }
 
 extern void _switchPML4(uintptr_t pml4);
+extern void _execve_starter();
 
 int _execve(const char *pathname, char *const argv[], char *const envp[])
 {
@@ -223,6 +224,8 @@ int _execve(const char *pathname, char *const argv[], char *const envp[])
     //Prepare context, store return address
     stackEnd -= sizeof(void*);
     *(void**)(stackEnd) = exePos;
+    stackEnd -= sizeof(void*);
+    *(void**)(stackEnd) = _execve_starter;
     pdnew->stack = stackEnd;
 
     char *argLoc = (void*)0x100000;

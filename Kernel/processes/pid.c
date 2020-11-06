@@ -37,6 +37,7 @@ static size_t initFD(FileDescriptor **fdt, FileDescriptor *parent)
 }
 
 extern void inactiveProcess();
+extern void _execve_starter();
 void initProcesses()
 {
     ProcessDescriptor *kernel = &descriptors[KERNEL_PID];
@@ -63,6 +64,9 @@ void initProcesses()
     };
     inactive->stack -= sizeof(void*);
     *(void (**)())inactive->stack = inactiveProcess;
+    inactive->stack -= sizeof(void*);
+    *(void (**)())inactive->stack = _execve_starter;
+;
 }
 
 int createProcess(ProcessDescriptor **out)

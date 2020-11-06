@@ -4,6 +4,7 @@
 #include <lib.h>
 #include <loader.h>
 #include <pid.h>
+#include <scheduler.h>
 
 #define LOOPBACK 0x1FE
 #define ONE ((uint64_t)1)
@@ -41,6 +42,8 @@ static uintptr_t reservePhysPage()
 {
 	const size_t pageFieldSize = sizeof(physReservedPages) / sizeof(*physReservedPages);
 	int pos = 0, i;
+
+	Scheduler_Disable();
 	for(i = 0; i < pageFieldSize && physReservedPages[i] == -ONE; i++, pos += 64) ;
 	if(i == pageFieldSize)
 		return -1;
@@ -51,6 +54,7 @@ static uintptr_t reservePhysPage()
 	physReservedPages[i] |= ONE << off;
 
 	reservedPagesCount++;
+	Scheduler_Enable();
 	return pos << 12;
 }
 
@@ -61,11 +65,13 @@ static void freePhysPage(size_t idx)
 		return;
 
 	size_t off = idx % 64;
+	Scheduler_Disable();
 	if(physReservedPages[chunk] & (ONE << (off)))
 	{
 		reservedPagesCount--;
 		physReservedPages[chunk] &= ~(ONE << (off));
 	}
+	Scheduler_Enable();
 }
 
 size_t getReservedPagesCount() { return reservedPagesCount; }
