@@ -1,0 +1,3 @@
+wc
+
+Counts the lines from stdin

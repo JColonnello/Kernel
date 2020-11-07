@@ -56,6 +56,6 @@ cpuid:
 	mov [rdi + 4], ebx
 	mov [rdi + 8], ecx
 	mov [rdi + 12], edx
-.end
+.end:
 	pop rbx
 	ret

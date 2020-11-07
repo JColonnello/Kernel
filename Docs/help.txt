@@ -1,0 +1,5 @@
+help
+
+Usage: help [command]
+
+Displays help information on a program or the list of available commands

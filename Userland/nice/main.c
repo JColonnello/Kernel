@@ -21,6 +21,11 @@ int main(int argc, char *args[])
 	{
 		sscanf(args[0], "%d", &pid);
 		sscanf(args[1], "%d", &prio);
+		if(prio < 1 || prio > 5)
+		{
+			printf("Bad priority\n");
+			return 0;
+		}
 		int result = processPriority(pid, prio);
 		if(result < 0)
 			printf("Bad PID\n");

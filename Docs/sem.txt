@@ -1,0 +1,3 @@
+sem
+
+Displays a list of open semaphores

@@ -1,0 +1,6 @@
+printmem
+
+Usage: printmem <hex address>
+
+Prints 8 bytes at the selected address.
+Only useful with addresses past 0xFFFFFFFFC0100000

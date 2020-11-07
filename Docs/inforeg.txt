@@ -1,0 +1,3 @@
+inforeg
+
+Dumps registers captured with Ctrl+Alt+Supr

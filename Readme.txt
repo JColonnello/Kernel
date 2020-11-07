@@ -43,4 +43,4 @@ Esc: Erase whole line
 Backspace: Erase characters
 Ctrl-D: Send end-of-file (EOF)
 
-"help" command list available programs
+"help [cmd]" command lists available programs or information about a program

@@ -13,7 +13,10 @@ void main(int argc, char *args[])
 		{
 			FILE *file = fopen(args[i], "r");
 			if(file == NULL)
+			{
 				fprintf(stderr, "File not found: %s", args[i]);
+				return;
+			}
 			int count;
 			while((count = fread(buf, 1, sizeof(buf), file)) != 0)
 				fwrite(buf, 1, count, stdout);

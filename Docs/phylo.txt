@@ -1,0 +1,3 @@
+phylo
+
+Phylosopher's problem. Adds phylosophers with 'a', removes with 'r' and exits with 'q'. Press ENTER after every command

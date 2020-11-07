@@ -52,7 +52,7 @@ int open(const char *path, int mode)
 
     int err = openFile(&desc, path, mode);
     if(err != 0)
-        return err;
+        return -1;
 
     pd->fd[i] = desc;
     pd->fd[i].isOpen = true;

@@ -1,0 +1,3 @@
+filter
+
+Filters the vowels from stdin

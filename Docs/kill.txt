@@ -1,0 +1,5 @@
+kill
+
+Usage: kill <pid>
+
+Sends an exit signal to the remote process <pid>

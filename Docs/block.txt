@@ -1,0 +1,5 @@
+block
+
+Usage: block <pid>
+
+Alternates the selected process state between RUNNING and BLOCKED

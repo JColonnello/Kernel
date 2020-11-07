@@ -1,0 +1,6 @@
+cat
+
+Usage: cat [files...]
+
+Concatenates the files passed as arguments. With no arguments, prints stdin to stdout.
+Example: cat userland/list.txt

@@ -1,0 +1,5 @@
+nice
+
+Usage: nice <pid> [priority]
+
+Displays or changes the selected process priority (1-5)

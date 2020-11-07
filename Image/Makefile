@@ -9,9 +9,11 @@ QCOW2=$(OSIMAGENAME).qcow2
 IMG=$(OSIMAGENAME).img
 KERNEL=../Kernel/build/kernel.bin
 USERLAND= ../Userland/build
+HELP= ../Docs
 LAYOUTS= ../Layouts
 USERLAND_BIN = $(shell find $(USERLAND) -name "*.bin") $(USERLAND)/list.txt
 LAYOUTS_FILES = $(shell find $(LAYOUTS)/* -printf "\"%f\" ")
+HELP_FILES = $(shell find $(HELP)/* -name "*.txt" -printf "\"%f\" ")
 
 IMGSIZE=67108864
 
@@ -25,8 +27,12 @@ $(IMG): $(BMFS) $(MBR) $(PURE64) $(KERNEL)
 	$(BMFS_NEW) -d $(IMG) format -s $(IMGSIZE)
 	$(BMFS_NEW) -d $(IMG) mkdir userland
 	$(BMFS_NEW) -d $(IMG) mkdir layouts
+	$(BMFS_NEW) -d $(IMG) mkdir help
 	for f in $(LAYOUTS_FILES); do \
 	$(BMFS_NEW) -d $(IMG) cp "$(LAYOUTS)/$$f" "layouts/$$f"; \
+	done
+	for f in $(HELP_FILES); do \
+	$(BMFS_NEW) -d $(IMG) cp "$(HELP)/$$f" "help/$$f"; \
 	done
 	@touch .image
 

@@ -1,0 +1,3 @@
+recursive
+
+Spawns interations of itself until the process pool is exhausted. Then the instances exit in reverse order

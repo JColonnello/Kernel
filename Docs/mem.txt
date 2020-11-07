@@ -1,0 +1,3 @@
+mem
+
+Prints current memory usage in bytes: Displays total physical memory used and dynamic memory allocated for the kernel

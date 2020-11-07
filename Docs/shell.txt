@@ -1,0 +1,7 @@
+shell
+
+Command shell. Allows for the creation of background processes with &. Can pipe the stdout of a process to another with |. Every token must be separated with spaces. Exit with Ctrl+D
+Examples:
+cmd1 arg1 arg2 | cmd2 | cmd 3
+cmd1 &
+cmd1 & cmd2

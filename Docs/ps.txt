@@ -1,0 +1,3 @@
+ps
+
+Displays a list of running processes
