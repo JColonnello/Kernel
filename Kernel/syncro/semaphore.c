@@ -80,7 +80,7 @@ void sem_close(Semaphore *handler)
 
 void sem_wait(Semaphore *handler)
 {
-	waitEvent(handler->resource->count > 0 && !atomic_flag_test_and_set(&handler->resource->lock),
+	waitEvent(!atomic_flag_test_and_set(&handler->resource->lock) && (handler->resource->count > 0 || (atomic_flag_clear(&handler->resource->lock), 0)),
 		handler->resource->wait);
 
 	handler->resource->count--;

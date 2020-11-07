@@ -13,6 +13,14 @@ nasm qemu gcc make
 From the main project directory run:
 
   user@linux:$ make all
+  
+To choose a memory manager between Free-list and bit buddy [default] use:
+
+  user@linux:$ make all -DVIRT_MEM_LINKED
+  or
+  user@linux:$ make all -DVIRT_MEM_BUDDY
+  
+You can clean the build directories or rebuild everything using make clean and make rebuild
 
 3- Run the kernel
 
@@ -33,5 +41,6 @@ Ctrl-Alt-Supr: Store registers value
 Alt-Space: Change keyboard layout (US / Latin American)
 Esc: Erase whole line
 Backspace: Erase characters
+Ctrl-D: Send end-of-file (EOF)
 
 "help" command list available programs

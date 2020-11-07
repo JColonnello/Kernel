@@ -172,9 +172,9 @@ IDTR64: dw 256*16-1
 GDTR64: dw 2 * 16 - 1
 		dq __startOfUniverse + 0x1000
 
-TSS: 	resb 0x24
+TSS: 	times 0x24 db 0
 		dq exception_stack
-		resb 0x3c
+		times 0x3c db 0
 
 section .bss
 align 16

@@ -3,6 +3,7 @@
 #include <sys/process.h>
 #include <sys/semaphore.h>
 #include <stdlib.h>
+#include <string.h>
 
 uint64_t my_create_process(char * name, char *args[]){
 	return execve("userland/test_sync.bin", args, NULL);
@@ -62,8 +63,8 @@ void inc(int sem_id, int64_t value, uint64_t N) {
 }
 
 char idstr[5];
-char *plusargs[] = {idstr, "1", "100000", NULL};
-char *minusargs[] = {idstr, "-1", "100000", NULL};
+char *plusargs[] = {idstr, "1", "1000000", NULL};
+char *minusargs[] = {idstr, "-1", "1000000", NULL};
 
 void test_sync(){
 	*global = 0;
@@ -118,8 +119,12 @@ int main(int argc, char *args[]){
 		inc(sem_id, value, N);
 		return 0;
 	}
-
-	//test_no_sync();
-	test_sync();
+	else if(argc == 1 && strcmp(args[0], "nosync") == 0)
+	{
+		fprintf(stderr, "No sync\n");
+		test_no_sync();
+	}
+	else
+		test_sync();
 	return 0;
 }
